@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import contextlib
-import os
 import sys
 from dataclasses import dataclass, field
 from importlib import import_module, invalidate_caches, reload
@@ -85,36 +84,37 @@ class Reloader:
                 return False, e
 
         try:
+            invalidate_caches()
             self._clear_bytecode_cache(module)
-            self._ensure_mtime_changed(module)
+            self._clear_loader_cache(module)
             invalidate_caches()
             reload(module)
             return True, None
         except Exception as e:
             return False, e
 
-    def _clear_bytecode_cache(self, module: ModuleType) -> None:
-        cached = getattr(module, "__cached__", None)
-        if cached and os.path.exists(cached):
-            with contextlib.suppress(OSError):
-                os.remove(cached)
+    def _clear_loader_cache(self, module: ModuleType) -> None:
+        spec = getattr(module, "__spec__", None)
+        if spec and hasattr(spec, "loader") and spec.loader:
+            loader = spec.loader
+            if hasattr(loader, "path"):
+                path = loader.path
+                if hasattr(loader, "_cache") and isinstance(loader._cache, dict):
+                    loader._cache.pop(path, None)
 
-    def _ensure_mtime_changed(self, module: ModuleType) -> None:
+    def _clear_bytecode_cache(self, module: ModuleType) -> None:
         source_file = getattr(module, "__file__", None)
-        if not source_file or not os.path.exists(source_file):
+        if not source_file:
             return
 
-        try:
-            import time
+        source_path = Path(source_file)
+        pycache_dir = source_path.parent / "__pycache__"
 
-            current_mtime = os.path.getmtime(source_file)
-            now = time.time()
-
-            if (now - current_mtime) < 1.0:
-                new_mtime = int(current_mtime) + 1
-                os.utime(source_file, (new_mtime, new_mtime))
-        except OSError:
-            pass
+        if pycache_dir.exists():
+            module_stem = source_path.stem
+            for pyc_file in pycache_dir.glob(f"{module_stem}.*.pyc"):
+                with contextlib.suppress(OSError):
+                    pyc_file.unlink()
 
     def reload_modules(self, module_names: list[str]) -> ReloadResult:
         result = ReloadResult(success=True)
@@ -137,28 +137,15 @@ class Reloader:
         return result
 
     def _compute_reload_order(self, module_names: list[str]) -> list[str]:
-        all_modules: set[str] = set(module_names)
+        changed_set = set(module_names)
+        dependents: set[str] = set()
 
         for name in module_names:
-            dependents = self.get_dependent_modules(name)
-            all_modules.update(dependents)
-
-        ordered: list[str] = []
-        visited: set[str] = set()
-
-        def visit(name: str) -> None:
-            if name in visited:
-                return
-            visited.add(name)
             for dep in self.get_dependent_modules(name):
-                if dep in all_modules:
-                    visit(dep)
-            ordered.append(name)
+                if dep not in changed_set:
+                    dependents.add(dep)
 
-        for name in all_modules:
-            visit(name)
-
-        return ordered
+        return list(module_names) + list(dependents)
 
     async def reload_from_paths(self, paths: list[Path]) -> ReloadResult:
         module_names: list[str] = []

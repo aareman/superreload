@@ -19,7 +19,7 @@
 
     function connect() {
         var wsUrl = 'ws://' + window.location.hostname + ':' + config.wsPort;
-        
+
         try {
             ws = new WebSocket(wsUrl);
         } catch (e) {
@@ -90,13 +90,13 @@
         reconnectAttempts++;
         var delay = config.reconnectDelay * reconnectAttempts;
         log('Reconnecting in', delay, 'ms (attempt', reconnectAttempts + ')');
-        
+
         setTimeout(connect, delay);
     }
 
     function showIndicator(status, message) {
         var indicator = document.getElementById('superreload-indicator');
-        
+
         if (!indicator) {
             indicator = document.createElement('div');
             indicator.id = 'superreload-indicator';

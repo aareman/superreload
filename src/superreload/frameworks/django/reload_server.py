@@ -80,7 +80,7 @@ class DjangoReloadServer:
             del self._recently_reloaded[p]
 
     async def _handle_file_changes(self, changes: list[FileChange]) -> None:
-        paths = [c.path for c in changes]
+        paths = list({c.path for c in changes})
         paths = self._filter_cooldown_files(paths)
 
         if not paths:
