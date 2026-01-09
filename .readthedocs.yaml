@@ -7,4 +7,5 @@ build:
   commands:
     - cd docs && npm ci
     - cd docs && npm run build
-    - mv docs/build $READTHEDOCS_OUTPUT/html
+    - mkdir -p $READTHEDOCS_OUTPUT/html
+    - cp -r docs/build/* $READTHEDOCS_OUTPUT/html/
