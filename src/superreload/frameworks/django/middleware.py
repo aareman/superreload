@@ -476,9 +476,6 @@ class SuperReloadMiddleware:
         if "text/html" not in content_type:
             return False
 
-        if response.status_code != 200:
-            return False
-
         return request.headers.get("X-Requested-With") != "XMLHttpRequest"
 
     def _inject_script(self, response: Any) -> None:
