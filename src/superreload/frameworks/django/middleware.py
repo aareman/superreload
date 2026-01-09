@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     pass
 
-SUPERRELOAD_JS = """
+SUPERRELOAD_JS = r"""
 <script>
 (function() {
     var ws = null;
@@ -430,19 +430,17 @@ SUPERRELOAD_JS = """
     }
 
     function reloadCSS(files) {
-        var links = document.querySelectorAll('link[rel="stylesheet"]');
+        var links = Array.prototype.slice.call(document.querySelectorAll('link[rel="stylesheet"]'));
         var reloadedCount = 0;
 
-        for (var i = 0; i < links.length; i++) {
-            var link = links[i];
-            var href = link.getAttribute('href');
-            if (!href) continue;
+        links.forEach(function(oldLink) {
+            var href = oldLink.getAttribute('href');
+            if (!href) return;
 
-            // Check if any of the changed files match this stylesheet
-            var shouldReload = false;
+            var shouldReload = files.length === 0;
             for (var j = 0; j < files.length; j++) {
                 var filename = files[j];
-                if (href.indexOf(filename) !== -1 || filename.indexOf(href) !== -1) {
+                if (href.indexOf(filename) !== -1) {
                     shouldReload = true;
                     break;
                 }
@@ -453,43 +451,41 @@ SUPERRELOAD_JS = """
                 newLink.rel = 'stylesheet';
                 newLink.type = 'text/css';
 
-                // Add cache-busting timestamp
-                var separator = href.indexOf('?') !== -1 ? '&' : '?';
-                newLink.href = href.split('?')[0] + separator + '_t=' + new Date().getTime();
+                var baseHref = href.replace(/[?&]_superreload=\d+/, '');
+                var separator = baseHref.indexOf('?') !== -1 ? '&' : '?';
+                newLink.href = baseHref + separator + '_superreload=' + Date.now();
 
-                // Insert new link after old one
-                link.parentNode.insertBefore(newLink, link.nextSibling);
-
-                // Remove old link after new one loads
                 newLink.onload = function() {
-                    if (link.parentElement) {
-                        link.parentElement.removeChild(link);
+                    if (oldLink.parentNode) {
+                        oldLink.parentNode.removeChild(oldLink);
                     }
                 };
 
-                // Remove old link after timeout even if load event doesn't fire
-                setTimeout(function() {
-                    if (link.parentElement) {
-                        link.parentElement.removeChild(link);
+                newLink.onerror = function() {
+                    if (newLink.parentNode) {
+                        newLink.parentNode.removeChild(newLink);
                     }
-                }, 1000);
+                    console.error('[superreload] Failed to load CSS:', newLink.href);
+                };
 
+                if (oldLink.parentNode) {
+                    oldLink.parentNode.insertBefore(newLink, oldLink.nextSibling);
+                }
                 reloadedCount++;
             }
-        }
+        });
 
         if (reloadedCount > 0) {
             showIndicator('CSS Updated', '#10b981');
-        } else {
-            // Fallback: reload all CSS if no specific matches found
-            for (var i = 0; i < links.length; i++) {
-                var link = links[i];
+        } else if (files.length > 0) {
+            links.forEach(function(link) {
                 var href = link.getAttribute('href');
                 if (href) {
-                    var separator = href.indexOf('?') !== -1 ? '&' : '?';
-                    link.href = href.split('?')[0] + separator + '_t=' + new Date().getTime();
+                    var baseHref = href.replace(/[?&]_superreload=\d+/, '');
+                    var separator = baseHref.indexOf('?') !== -1 ? '&' : '?';
+                    link.href = baseHref + separator + '_superreload=' + Date.now();
                 }
-            }
+            });
             showIndicator('CSS Updated', '#10b981');
         }
     }

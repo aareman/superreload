@@ -101,7 +101,6 @@ class DjangoFramework(Framework):
         return super().get_ignore_patterns() + [
             "*/migrations/*",
             "staticfiles",
-            "static",
             "media",
             ".devenv",
             "*.log",

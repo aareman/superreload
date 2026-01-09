@@ -464,18 +464,17 @@
     }
 
     function reloadCSS(files) {
-        var links = document.querySelectorAll('link[rel="stylesheet"]');
+        var links = Array.prototype.slice.call(document.querySelectorAll('link[rel="stylesheet"]'));
         var reloadedCount = 0;
 
-        for (var i = 0; i < links.length; i++) {
-            var link = links[i];
-            var href = link.getAttribute('href');
-            if (!href) continue;
+        links.forEach(function(oldLink) {
+            var href = oldLink.getAttribute('href');
+            if (!href) return;
 
-            var shouldReload = false;
+            var shouldReload = files.length === 0;
             for (var j = 0; j < files.length; j++) {
                 var filename = files[j];
-                if (href.indexOf(filename) !== -1 || filename.indexOf(href) !== -1) {
+                if (href.indexOf(filename) !== -1) {
                     shouldReload = true;
                     break;
                 }
@@ -486,39 +485,41 @@
                 newLink.rel = 'stylesheet';
                 newLink.type = 'text/css';
 
-                var separator = href.indexOf('?') !== -1 ? '&' : '?';
-                newLink.href = href.split('?')[0] + separator + '_t=' + new Date().getTime();
+                var baseHref = href.replace(/[?&]_superreload=\d+/, '');
+                var separator = baseHref.indexOf('?') !== -1 ? '&' : '?';
+                newLink.href = baseHref + separator + '_superreload=' + Date.now();
 
-                link.parentNode.insertBefore(newLink, link.nextSibling);
+                newLink.onload = function() {
+                    if (oldLink.parentNode) {
+                        oldLink.parentNode.removeChild(oldLink);
+                    }
+                };
 
-                (function(oldLink) {
-                    newLink.onload = function() {
-                        if (oldLink.parentElement) {
-                            oldLink.parentElement.removeChild(oldLink);
-                        }
-                    };
-                    setTimeout(function() {
-                        if (oldLink.parentElement) {
-                            oldLink.parentElement.removeChild(oldLink);
-                        }
-                    }, 1000);
-                })(link);
+                newLink.onerror = function() {
+                    if (newLink.parentNode) {
+                        newLink.parentNode.removeChild(newLink);
+                    }
+                    log('Failed to load CSS:', newLink.href);
+                };
 
+                if (oldLink.parentNode) {
+                    oldLink.parentNode.insertBefore(newLink, oldLink.nextSibling);
+                }
                 reloadedCount++;
             }
-        }
+        });
 
         if (reloadedCount > 0) {
             showToast('CSS Updated', '#10b981');
-        } else {
-            for (var k = 0; k < links.length; k++) {
-                var lnk = links[k];
-                var lnkHref = lnk.getAttribute('href');
-                if (lnkHref) {
-                    var sep = lnkHref.indexOf('?') !== -1 ? '&' : '?';
-                    lnk.href = lnkHref.split('?')[0] + sep + '_t=' + new Date().getTime();
+        } else if (files.length > 0) {
+            links.forEach(function(link) {
+                var href = link.getAttribute('href');
+                if (href) {
+                    var baseHref = href.replace(/[?&]_superreload=\d+/, '');
+                    var separator = baseHref.indexOf('?') !== -1 ? '&' : '?';
+                    link.href = baseHref + separator + '_superreload=' + Date.now();
                 }
-            }
+            });
             showToast('CSS Updated', '#10b981');
         }
     }
