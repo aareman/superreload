@@ -91,6 +91,9 @@ class DjangoReloadServer:
             logger.debug(f"File change: {path}")
 
         py_files = [p for p in paths if p.suffix == ".py"]
+        css_files = [p for p in paths if p.suffix == ".css"]
+        js_files = [p for p in paths if p.suffix == ".js"]
+        other_files = [p for p in paths if p.suffix not in (".py", ".css", ".js")]
 
         ctx = ReloadContext(changed_files=paths)
 
@@ -121,8 +124,19 @@ class DjangoReloadServer:
                 )
                 return
 
-        file_names = [str(p.name) for p in paths]
-        await self.websocket.notify_reload(file_names)
+        if css_files:
+            css_names = [str(p.name) for p in css_files]
+            logger.info(f"CSS hot reload: {', '.join(css_names)}")
+            await self.websocket.notify_css_reload(css_names)
+
+        if js_files:
+            js_names = [str(p.name) for p in js_files]
+            logger.info(f"JS hot reload: {', '.join(js_names)}")
+            await self.websocket.notify_js_reload(js_names)
+
+        if py_files or other_files:
+            file_names = [str(p.name) for p in py_files + other_files]
+            await self.websocket.notify_reload(file_names)
 
     async def _run(self) -> None:
         await self.websocket.start()

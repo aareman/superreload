@@ -95,6 +95,22 @@ class WebSocketServer:
             )
         )
 
+    async def notify_css_reload(self, files: list[str]) -> None:
+        await self.broadcast(
+            WebSocketMessage(
+                type="css_reload",
+                data={"files": files, "timestamp": asyncio.get_event_loop().time()},
+            )
+        )
+
+    async def notify_js_reload(self, files: list[str]) -> None:
+        await self.broadcast(
+            WebSocketMessage(
+                type="js_reload",
+                data={"files": files, "timestamp": asyncio.get_event_loop().time()},
+            )
+        )
+
     async def notify_error(self, error: str, details: dict[str, Any] | None = None) -> None:
         await self.broadcast(
             WebSocketMessage(

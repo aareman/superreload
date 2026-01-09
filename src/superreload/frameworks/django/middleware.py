@@ -413,6 +413,94 @@ SUPERRELOAD_JS = """
         }
     });
 
+    function showIndicator(message, color) {
+        var indicator = document.createElement('div');
+        indicator.textContent = message;
+        indicator.style.cssText = 'position:fixed;top:20px;right:20px;padding:12px 20px;background:' + color + ';color:#fff;border-radius:8px;font-family:sans-serif;font-size:14px;font-weight:600;z-index:999999;animation:superreload-fadein 0.2s ease-out;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+        document.body.appendChild(indicator);
+        setTimeout(function() {
+            indicator.style.opacity = '0';
+            indicator.style.transition = 'opacity 0.3s ease-out';
+            setTimeout(function() {
+                if (indicator.parentElement) {
+                    document.body.removeChild(indicator);
+                }
+            }, 300);
+        }, 2000);
+    }
+
+    function reloadCSS(files) {
+        var links = document.querySelectorAll('link[rel="stylesheet"]');
+        var reloadedCount = 0;
+
+        for (var i = 0; i < links.length; i++) {
+            var link = links[i];
+            var href = link.getAttribute('href');
+            if (!href) continue;
+
+            // Check if any of the changed files match this stylesheet
+            var shouldReload = false;
+            for (var j = 0; j < files.length; j++) {
+                var filename = files[j];
+                if (href.indexOf(filename) !== -1 || filename.indexOf(href) !== -1) {
+                    shouldReload = true;
+                    break;
+                }
+            }
+
+            if (shouldReload) {
+                var newLink = document.createElement('link');
+                newLink.rel = 'stylesheet';
+                newLink.type = 'text/css';
+
+                // Add cache-busting timestamp
+                var separator = href.indexOf('?') !== -1 ? '&' : '?';
+                newLink.href = href.split('?')[0] + separator + '_t=' + new Date().getTime();
+
+                // Insert new link after old one
+                link.parentNode.insertBefore(newLink, link.nextSibling);
+
+                // Remove old link after new one loads
+                newLink.onload = function() {
+                    if (link.parentElement) {
+                        link.parentElement.removeChild(link);
+                    }
+                };
+
+                // Remove old link after timeout even if load event doesn't fire
+                setTimeout(function() {
+                    if (link.parentElement) {
+                        link.parentElement.removeChild(link);
+                    }
+                }, 1000);
+
+                reloadedCount++;
+            }
+        }
+
+        if (reloadedCount > 0) {
+            showIndicator('CSS Updated', '#10b981');
+        } else {
+            // Fallback: reload all CSS if no specific matches found
+            for (var i = 0; i < links.length; i++) {
+                var link = links[i];
+                var href = link.getAttribute('href');
+                if (href) {
+                    var separator = href.indexOf('?') !== -1 ? '&' : '?';
+                    link.href = href.split('?')[0] + separator + '_t=' + new Date().getTime();
+                }
+            }
+            showIndicator('CSS Updated', '#10b981');
+        }
+    }
+
+    function reloadJS(files) {
+        showIndicator('JS Updated - Reloading...', '#f59e0b');
+        setTimeout(function() {
+            window.location.reload();
+        }, 500);
+    }
+
     function connect() {
         var wsUrl = 'ws://' + window.location.hostname + ':9877';
         ws = new WebSocket(wsUrl);
@@ -432,6 +520,12 @@ SUPERRELOAD_JS = """
             } else if (msg.type === 'error') {
                 console.error('[superreload] Error:', msg.data.message);
                 createOverlay(msg.data);
+            } else if (msg.type === 'css_reload') {
+                console.log('[superreload] CSS reload:', msg.data.files);
+                reloadCSS(msg.data.files);
+            } else if (msg.type === 'js_reload') {
+                console.log('[superreload] JS reload:', msg.data.files);
+                reloadJS(msg.data.files);
             }
         };
 

@@ -443,6 +443,16 @@
                 }, 100);
                 break;
 
+            case 'css_reload':
+                log('CSS reload:', msg.data.files);
+                reloadCSS(msg.data.files);
+                break;
+
+            case 'js_reload':
+                log('JS reload:', msg.data.files);
+                reloadJS(msg.data.files);
+                break;
+
             case 'error':
                 console.error('[superreload] Server error:', msg.data.message);
                 createOverlay(msg.data);
@@ -451,6 +461,89 @@
             default:
                 log('Unknown message type:', msg.type);
         }
+    }
+
+    function reloadCSS(files) {
+        var links = document.querySelectorAll('link[rel="stylesheet"]');
+        var reloadedCount = 0;
+
+        for (var i = 0; i < links.length; i++) {
+            var link = links[i];
+            var href = link.getAttribute('href');
+            if (!href) continue;
+
+            var shouldReload = false;
+            for (var j = 0; j < files.length; j++) {
+                var filename = files[j];
+                if (href.indexOf(filename) !== -1 || filename.indexOf(href) !== -1) {
+                    shouldReload = true;
+                    break;
+                }
+            }
+
+            if (shouldReload) {
+                var newLink = document.createElement('link');
+                newLink.rel = 'stylesheet';
+                newLink.type = 'text/css';
+
+                var separator = href.indexOf('?') !== -1 ? '&' : '?';
+                newLink.href = href.split('?')[0] + separator + '_t=' + new Date().getTime();
+
+                link.parentNode.insertBefore(newLink, link.nextSibling);
+
+                (function(oldLink) {
+                    newLink.onload = function() {
+                        if (oldLink.parentElement) {
+                            oldLink.parentElement.removeChild(oldLink);
+                        }
+                    };
+                    setTimeout(function() {
+                        if (oldLink.parentElement) {
+                            oldLink.parentElement.removeChild(oldLink);
+                        }
+                    }, 1000);
+                })(link);
+
+                reloadedCount++;
+            }
+        }
+
+        if (reloadedCount > 0) {
+            showToast('CSS Updated', '#10b981');
+        } else {
+            for (var k = 0; k < links.length; k++) {
+                var lnk = links[k];
+                var lnkHref = lnk.getAttribute('href');
+                if (lnkHref) {
+                    var sep = lnkHref.indexOf('?') !== -1 ? '&' : '?';
+                    lnk.href = lnkHref.split('?')[0] + sep + '_t=' + new Date().getTime();
+                }
+            }
+            showToast('CSS Updated', '#10b981');
+        }
+    }
+
+    function reloadJS(files) {
+        showToast('JS Updated - Reloading...', '#f59e0b');
+        setTimeout(function() {
+            window.location.reload();
+        }, 500);
+    }
+
+    function showToast(message, color) {
+        var toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = 'position:fixed;top:20px;right:20px;padding:12px 20px;background:' + color + ';color:#fff;border-radius:8px;font-family:sans-serif;font-size:14px;font-weight:600;z-index:999999;animation:superreload-fadein 0.2s ease-out;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+        document.body.appendChild(toast);
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s ease-out';
+            setTimeout(function() {
+                if (toast.parentElement) {
+                    document.body.removeChild(toast);
+                }
+            }, 300);
+        }, 2000);
     }
 
     function scheduleReconnect() {
