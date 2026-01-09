@@ -86,7 +86,7 @@ class Reloader:
 
         try:
             self._clear_bytecode_cache(module)
-            self._force_source_reload(module)
+            self._ensure_mtime_changed(module)
             invalidate_caches()
             reload(module)
             return True, None
@@ -94,31 +94,25 @@ class Reloader:
             return False, e
 
     def _clear_bytecode_cache(self, module: ModuleType) -> None:
-        """Remove the .pyc bytecode cache file for a module.
-
-        This ensures that reload() reads the updated source file
-        rather than using a stale cached bytecode.
-        """
         cached = getattr(module, "__cached__", None)
         if cached and os.path.exists(cached):
             with contextlib.suppress(OSError):
                 os.remove(cached)
 
-    def _force_source_reload(self, module: ModuleType) -> None:
-        """Force Python to re-read the source file by bumping its mtime.
-
-        Python's reload() uses second-level mtime granularity to detect changes.
-        If a file is modified within the same second, reload() won't see it.
-        We bump the mtime forward to ensure the change is detected.
-        """
+    def _ensure_mtime_changed(self, module: ModuleType) -> None:
         source_file = getattr(module, "__file__", None)
         if not source_file or not os.path.exists(source_file):
             return
 
         try:
+            import time
+
             current_mtime = os.path.getmtime(source_file)
-            new_mtime = int(current_mtime) + 2
-            os.utime(source_file, (new_mtime, new_mtime))
+            now = time.time()
+
+            if (now - current_mtime) < 1.0:
+                new_mtime = int(current_mtime) + 1
+                os.utime(source_file, (new_mtime, new_mtime))
         except OSError:
             pass
 
