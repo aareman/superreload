@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from superreload.core.errors import format_exception
 from superreload.core.framework import ReloadContext
 from superreload.core.reloader import Reloader
 from superreload.core.watcher import FileChange, FileWatcher, FileWatcherConfig
@@ -106,11 +107,17 @@ class DjangoReloadServer:
             if result.success:
                 logger.info(f"Reloaded: {', '.join(result.reloaded_modules)}")
             else:
-                for error in result.errors:
-                    logger.error(f"Reload error: {error}")
+                error_details = []
+                for i, error in enumerate(result.errors):
+                    module_name = (
+                        result.failed_modules[i] if i < len(result.failed_modules) else None
+                    )
+                    error_details.append(format_exception(error, module_name).to_dict())
+                    logger.error(f"Reload error in {module_name}: {error}")
+
                 await self.websocket.notify_error(
                     "Reload failed",
-                    {"errors": [str(e) for e in result.errors]},
+                    {"errors": error_details},
                 )
                 return
 
