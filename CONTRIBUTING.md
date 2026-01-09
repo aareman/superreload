@@ -47,11 +47,41 @@ Pre-commit hooks run automatically on commit. If they fail, fix the issues and c
 
 1. Create a branch from `main`
 2. Make focused, atomic commits
-3. Write clear commit messages
+3. Use conventional commit format (see below)
 4. Add tests for new functionality
 5. Ensure all tests pass
 6. Ensure linting passes
 7. Submit PR with a clear description of changes
+
+## Commit Messages
+
+We use [Conventional Commits](https://www.conventionalcommits.org/). Format: `type: description`
+
+| Type | Use For |
+|------|---------|
+| `feat` | New features |
+| `fix` | Bug fixes |
+| `docs` | Documentation only |
+| `refactor` | Code changes that don't fix bugs or add features |
+| `test` | Adding/updating tests |
+| `ci` | CI/CD changes |
+| `chore` | Maintenance (deps, configs) |
+
+**Rules:**
+- Commit each logical change separately (not batched)
+- Commit immediately when a change is complete and working
+- Keep commits atomic - one concern per commit
+- Run tests before committing
+
+**Examples:**
+```
+feat: add Flask framework support
+fix: CSS hot reload closure bug
+docs: update installation instructions
+refactor: extract WebSocket handler into separate class
+test: add integration tests for Django middleware
+ci: add Python 3.13 to test matrix
+```
 
 ### PR Guidelines
 
