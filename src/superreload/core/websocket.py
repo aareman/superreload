@@ -8,15 +8,13 @@ from typing import Any, Callable
 
 try:
     import websockets
-    from websockets import ServerConnection
     from websockets import serve as ws_serve
 
     HAS_WEBSOCKETS = True
 except ImportError:
     HAS_WEBSOCKETS = False
     websockets = None  # type: ignore[assignment]
-    ServerConnection = None  # type: ignore[misc, assignment]
-    ws_serve = None  # type: ignore[assignment]
+    ws_serve = None  # type: ignore[assignment, misc]
 
 logger = logging.getLogger(__name__)
 

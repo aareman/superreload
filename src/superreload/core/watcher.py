@@ -4,10 +4,10 @@ import asyncio
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
-    pass
+    from watchfiles import Change
 
 try:
     from watchfiles import Change, awatch
@@ -15,11 +15,12 @@ try:
     HAS_WATCHFILES = True
 except ImportError:
     HAS_WATCHFILES = False
-    Change = None  # type: ignore[misc, assignment]
 
-    async def awatch(*_args, **_kwargs) -> AsyncIterator[set[tuple[int, str]]]:  # type: ignore[misc]
+    async def awatch(  # type: ignore[misc]
+        *_args: Any, **_kwargs: Any
+    ) -> AsyncIterator[set[tuple[Any, str]]]:
         raise ImportError("watchfiles is required for file watching")
-        yield set()  # type: ignore[misc]
+        yield set()
 
 
 @dataclass
@@ -76,11 +77,11 @@ class FileWatcher:
     def _change_type_to_str(self, change: int) -> str:
         if not HAS_WATCHFILES:
             return "unknown"
-        if change == Change.added:  # type: ignore[union-attr]
+        if change == Change.added:
             return "added"
-        elif change == Change.modified:  # type: ignore[union-attr]
+        elif change == Change.modified:
             return "modified"
-        elif change == Change.deleted:  # type: ignore[union-attr]
+        elif change == Change.deleted:
             return "deleted"
         return "unknown"
 

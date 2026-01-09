@@ -562,11 +562,12 @@ class SuperReloadMiddleware:
         return response
 
     def _should_inject(self, request: Any, response: Any) -> bool:
-        content_type = response.get("Content-Type", "")
+        content_type: str = response.get("Content-Type", "")
         if "text/html" not in content_type:
             return False
 
-        return request.headers.get("X-Requested-With") != "XMLHttpRequest"
+        x_requested_with: str | None = request.headers.get("X-Requested-With")
+        return x_requested_with != "XMLHttpRequest"
 
     def _inject_script(self, response: Any) -> None:
         if not hasattr(response, "content"):

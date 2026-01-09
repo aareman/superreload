@@ -3,20 +3,13 @@ from __future__ import annotations
 import sys
 from typing import Any
 
-try:
-    from django.core.management import execute_from_command_line
-    from django.core.management.base import BaseCommand, CommandError
-
-    HAS_DJANGO = True
-except ImportError:
-    HAS_DJANGO = False
-    BaseCommand = object  # type: ignore[misc, assignment]
-    CommandError = Exception  # type: ignore[misc, assignment]
+from django.core.management import execute_from_command_line
+from django.core.management.base import BaseCommand
 
 from superreload.frameworks.django.reload_server import DjangoReloadServer
 
 
-class Command(BaseCommand):
+class Command(BaseCommand):  # type: ignore[misc]
     help = "Run Django development server with superreload hot reloading"
 
     def add_arguments(self, parser: Any) -> None:
@@ -40,9 +33,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *_args: Any, **options: Any) -> None:
-        if not HAS_DJANGO:
-            raise CommandError("Django is required to use this command")
-
         if options.get("no_superreload"):
             self.stdout.write("Running without superreload")
             self._run_django_server(options["addrport"])
