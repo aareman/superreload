@@ -8,6 +8,8 @@ superreload watches your Python files and automatically reloads modules when the
 
 - **Instant reload**: Python modules reload without restarting the server
 - **Browser auto-refresh**: WebSocket-based browser refresh on file changes
+- **CSS hot reload**: Stylesheets update without page refresh
+- **Error overlay**: Beautiful error display with stack traces and local variables
 - **Django-first**: Deep Django integration with view, template, and URL cache clearing
 - **Extensible**: Framework-agnostic core with pluggable framework adapters
 - **Zero config**: Works out of the box with sensible defaults
@@ -15,39 +17,53 @@ superreload watches your Python files and automatically reloads modules when the
 ## Installation
 
 ```bash
-pip install superreload
-
-# With Django support
 pip install superreload[django]
+```
+
+Or with uv:
+
+```bash
+uv add superreload[django]
 ```
 
 ## Quick Start (Django)
 
-### Option 1: Middleware (Recommended)
-
-Add to your `settings.py`:
+### 1. Add to INSTALLED_APPS
 
 ```python
+# settings.py
+
+INSTALLED_APPS = [
+    # ...
+    'superreload.frameworks.django',
+    # ...
+]
+```
+
+### 2. Add the Middleware
+
+```python
+# settings.py
+
 MIDDLEWARE = [
     'superreload.frameworks.django.SuperReloadMiddleware',
     # ... other middleware
 ]
 ```
 
-Then run with the management command:
+### 3. Run the Development Server
 
 ```bash
 python manage.py superreload
 ```
 
-### Option 2: Manual Setup
+Or with an address:
 
-```python
-from superreload.frameworks.django import DjangoReloadServer
-
-server = DjangoReloadServer()
-server.start(background=True)
+```bash
+python manage.py superreload 0.0.0.0:8000
 ```
+
+That's it! Edit any Python, HTML, CSS, or JS file and watch your browser update automatically.
 
 ## How It Works
 
@@ -55,6 +71,8 @@ server.start(background=True)
 2. **Module Reloader**: Intelligently reloads changed Python modules and their dependents
 3. **WebSocket Server**: Notifies connected browsers to refresh
 4. **Middleware**: Injects a tiny JavaScript client into HTML responses
+5. **CSS Hot Reload**: Swaps stylesheets without full page refresh
+6. **Error Overlay**: Shows reload errors with full stack traces in the browser
 
 ## Configuration
 
@@ -66,9 +84,17 @@ Default port is `9877`. Change it via:
 python manage.py superreload --superreload-port 9999
 ```
 
-### Disable for Production
+### Disable superreload
 
-The middleware automatically detects `DEBUG = False` and disables itself.
+Run without hot reloading:
+
+```bash
+python manage.py superreload --no-superreload
+```
+
+### Production
+
+The middleware only activates when `DEBUG = True`. In production, it does nothing.
 
 ## Supported Frameworks
 
@@ -76,20 +102,29 @@ The middleware automatically detects `DEBUG = False` and disables itself.
 - 🔜 **Flask** (coming soon)
 - 🔜 **FastAPI** (coming soon)
 
+## Requirements
+
+- Python 3.9+
+- Django 4.2+ (for Django integration)
+
 ## Development
 
-This project uses [devenv](https://devenv.sh) for reproducible development environments.
-
 ```bash
-# Enter development shell
-devenv shell
+# Clone the repo
+git clone https://github.com/superreload/superreload.git
+cd superreload
+
+# Install dependencies
+uv sync --dev
 
 # Run tests
-pytest
+uv run pytest
 
-# Lint and format
-ruff check src tests
-ruff format src tests
+# Lint
+uv run ruff check src tests
+
+# Type check
+uv run mypy src
 ```
 
 ## Architecture
@@ -97,6 +132,7 @@ ruff format src tests
 ```
 superreload/
 ├── core/
+│   ├── errors.py       # Error formatting with local variables
 │   ├── framework.py    # Base framework abstraction
 │   ├── reloader.py     # Python module reloading
 │   ├── watcher.py      # File system watching
@@ -104,7 +140,7 @@ superreload/
 └── frameworks/
     └── django/
         ├── framework.py      # Django-specific reload logic
-        ├── middleware.py     # Auto-inject JS client
+        ├── middleware.py     # Auto-inject JS client + error overlay
         └── reload_server.py  # Orchestrates everything
 ```
 
@@ -114,8 +150,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Contributing
 
-Contributions welcome! Please read the contributing guidelines first.
-
----
-
-**superreload** — Stop waiting for restarts. Start shipping faster. 🚀
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
