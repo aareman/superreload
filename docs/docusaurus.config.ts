@@ -2,6 +2,9 @@ import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
+// Read the Docs sets READTHEDOCS=True and serves from /en/latest/
+const isReadTheDocs = process.env.READTHEDOCS === 'True';
+
 const config: Config = {
   title: 'superreload',
   tagline: 'True hot reload for Django and Python web frameworks',
@@ -11,8 +14,8 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://superreload.dev',
-  baseUrl: '/',
+  url: isReadTheDocs ? 'https://superreload.readthedocs.io' : 'https://superreload.dev',
+  baseUrl: isReadTheDocs ? '/en/latest/' : '/',
 
   organizationName: 'superreload',
   projectName: 'superreload',
