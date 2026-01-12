@@ -1,6 +1,30 @@
 # CHANGELOG
 
 
+## v1.0.0 (2026-01-12)
+
+### Build System
+
+- Autoenable python venv
+  ([`3f167ed`](https://github.com/aareman/superreload/commit/3f167ed45f9767c91a2dccb29128a2d5dcd3037a))
+
+### Features
+
+- Migrate CLI from argparse to Typer
+  ([`5aa1d3f`](https://github.com/aareman/superreload/commit/5aa1d3f7e5d92b0daf2a421192b10f74b7272817))
+
+- Replace argparse with Typer for modern CLI experience - Add styled Rich output with colored
+  [superreload] prefix - Change version from subcommand to --version/-V flag - Add shell completion
+  support (--install-completion) - Mark django command as deprecated in help - Add 12 CLI tests
+  using typer.testing.CliRunner
+
+BREAKING CHANGE: 'superreload version' replaced by 'superreload --version'
+
+### BREAKING CHANGES
+
+- 'superreload version' replaced by 'superreload --version'
+
+
 ## v0.3.1 (2026-01-12)
 
 ### Bug Fixes
@@ -10,6 +34,11 @@
 
 The test was expecting 'Reloading module' log but the module wasn't loaded yet, so it took the
   'importing fresh' path instead.
+
+### Chores
+
+- **release**: 0.3.1
+  ([`81f96a6`](https://github.com/aareman/superreload/commit/81f96a6185b9b195756daa728b103171821a3639))
 
 
 ## v0.3.0 (2026-01-12)
