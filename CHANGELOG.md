@@ -1,0 +1,151 @@
+# CHANGELOG
+
+
+## v0.1.0 (2026-01-12)
+
+### Bug Fixes
+
+- Clarify console reload shortcut requires Enter key
+  ([`356021c`](https://github.com/aareman/superreload/commit/356021c3970ac07553dcb1ff869717f30b7110c5))
+
+- Clear template cache on HTML file changes for proper reload
+  ([`6a96d4e`](https://github.com/aareman/superreload/commit/6a96d4eec03ea551e0bbeeaff451826d8d827dbb))
+
+- Correct reload order and dedupe file changes
+  ([`9dbe3d1`](https://github.com/aareman/superreload/commit/9dbe3d1157e9fcd35590b5faa131b3828c564e7d))
+
+- Reload changed modules before dependents so imports get fresh references - Deduplicate file paths
+  from watchfiles (reports same file twice sometimes) - Remove _ensure_mtime_changed() which caused
+  infinite reload loops - Use glob-based bytecode cache clearing for pytest compatibility - Add
+  loader cache clearing for more reliable reloads
+
+- Css hot reload closure bug and enable static dir watching
+  ([`4fc8497`](https://github.com/aareman/superreload/commit/4fc84976d7694ff81a92672f5944039cae4336b6))
+
+- Inject reload script into error pages for recovery
+  ([`cd59f57`](https://github.com/aareman/superreload/commit/cd59f5750b209ff6a415f6c3671e82f1dcd88bf0))
+
+- Only bump mtime when file modified within last second
+  ([`15d1719`](https://github.com/aareman/superreload/commit/15d171949acb39bf177d9db83065efac5bc37b42))
+
+Previously, mtime was bumped unconditionally which caused editors to show 'file changed on disk'
+  warnings. Now we only bump mtime when the file was modified within the last second, which is only
+  needed for Python's second-level mtime granularity edge case in tests.
+
+- Reload root URLconf to pick up new view references
+  ([`b71ee84`](https://github.com/aareman/superreload/commit/b71ee84045929ed9faa8b3d64e3a3d054d8ab772))
+
+- Resolve mypy type errors for CI compatibility
+  ([`033b82e`](https://github.com/aareman/superreload/commit/033b82e76c50a2eeacc2b59dbab3045b213de802))
+
+- Rtd build by creating output directory before copy
+  ([`a338619`](https://github.com/aareman/superreload/commit/a338619ab02d3e2e90436ca0841bdb398bed8c25))
+
+- Set correct baseUrl for Read the Docs builds
+  ([`d115638`](https://github.com/aareman/superreload/commit/d1156381e285863a6ec9b8a4b722557fed67ea2c))
+
+- Use standard python build in semantic-release
+  ([`a2264ae`](https://github.com/aareman/superreload/commit/a2264aedf167f30f3af35ea7bebb7e486efd8ddc))
+
+### Chores
+
+- Add debug output for file change detection
+  ([`6d4aa65`](https://github.com/aareman/superreload/commit/6d4aa6592aa615e35ad5829e987874bdc2c48c00))
+
+- Add more debug logging for file change handling
+  ([`9ebd83e`](https://github.com/aareman/superreload/commit/9ebd83ea9051bafc7f6937ac0302ccf2ed65606c))
+
+- Remove GitHub Pages workflow, use Read the Docs only
+  ([`1aa5354`](https://github.com/aareman/superreload/commit/1aa5354bcd2b7d9a9e143ef7104acadae604cc13))
+
+### Continuous Integration
+
+- Add GitHub Actions for testing and linting on Python 3.9-3.13
+  ([`a76705d`](https://github.com/aareman/superreload/commit/a76705d984038fb767e4662384903422522e0e4b))
+
+- Add semantic release workflow with PyPI publishing
+  ([`e6cf9c5`](https://github.com/aareman/superreload/commit/e6cf9c5e83f5f6cbf3e06347f605a05aeffeebdc))
+
+### Documentation
+
+- Add --ws-path documentation
+  ([`12779ce`](https://github.com/aareman/superreload/commit/12779ce7ec62b319596ea7c618f223565c9cb121))
+
+- Add AGENTS.md project knowledge base
+  ([`94b2e61`](https://github.com/aareman/superreload/commit/94b2e6179be67402b00a85223be73705e610c880))
+
+- Add conventional commit guidelines to CONTRIBUTING.md
+  ([`ea4fe31`](https://github.com/aareman/superreload/commit/ea4fe310dc46bd1263220fe79f254d8879e1d05c))
+
+- Add Docker setup, --force-polling, and hot reload limitations
+  ([`2dcbc5d`](https://github.com/aareman/superreload/commit/2dcbc5dd823d4eed6a5d1f200455a2896ebdc3be))
+
+- Add Docusaurus documentation site, update README, add CONTRIBUTING.md
+  ([`2a4df27`](https://github.com/aareman/superreload/commit/2a4df278c931e7c57c5e6417bbbb112c788ac2d2))
+
+- Add Read the Docs configuration
+  ([`5e5077d`](https://github.com/aareman/superreload/commit/5e5077d841d56baf6bcaf719ad8bf7f1629d1aa4))
+
+- Update CLI args and add keyboard shortcuts documentation
+  ([`818657e`](https://github.com/aareman/superreload/commit/818657ede5e6c3c9f3f385b0d5ec9dab8ffc684f))
+
+### Features
+
+- Add --force-polling option for Docker file watching
+  ([`20236a7`](https://github.com/aareman/superreload/commit/20236a7c89ce34da7ce6f3339501a774aee02a1a))
+
+- Add --ws-path option for configurable WebSocket URL path
+  ([`db95cf8`](https://github.com/aareman/superreload/commit/db95cf8b428a027913cca5961cdff94d9ab4a20d))
+
+- Add configurable WebSocket host and secure (wss) settings
+  ([`a6e99ea`](https://github.com/aareman/superreload/commit/a6e99ea81e25873dc8757b93b0dff15e95fb1aa5))
+
+- Add error overlay with stack traces and local variables
+  ([`014094e`](https://github.com/aareman/superreload/commit/014094efed934160a910b8912db60c161bf23c5a))
+
+Show Python errors in browser with beautiful dark-themed overlay: - Full stack trace with file
+  locations - Local variables for each stack frame - Source code context with error line highlighted
+  - Dismiss with ESC or close button
+
+- Add keyboard shortcuts for manual reload (Ctrl+Shift+R in browser, 'r' in console)
+  ([`8439809`](https://github.com/aareman/superreload/commit/84398095b6970bda18f7a423335844d4bdbf0fa2))
+
+- Clear Django app registry caches after reload
+  ([`a5691dc`](https://github.com/aareman/superreload/commit/a5691dca1fcd6cb5a9252948cee81eb6fcf0b928))
+
+- Css/js hot reload without full page refresh
+  ([`b87c9c4`](https://github.com/aareman/superreload/commit/b87c9c4f6f1002cb79f47f24b0d9b7960a487966))
+
+CSS changes now update stylesheets in-place without refreshing. JS changes still trigger full reload
+  for safety (state management).
+
+- Initial superreload implementation
+  ([`eb08208`](https://github.com/aareman/superreload/commit/eb082087533df4fbd80198f6209c3fe35bfe6d7a))
+
+Complete implementation of superreload, a hot reload tool for Django that watches Python files,
+  reloads modules in-place without server restart, and auto-refreshes the browser via WebSocket.
+
+Core features: - File watcher using watchfiles for efficient filesystem monitoring - Module reloader
+  with importlib.reload and mtime bump for cache bypass - WebSocket server for browser notification
+  - Django middleware for injecting JS client into HTML responses - Django framework adapter with
+  URL/template cache clearing - Reload cooldown mechanism to prevent infinite reload loops
+
+Fixes applied: - Force source reload by bumping mtime (Python uses second-level granularity) - Clear
+  bytecode cache to prevent stale .pyc issues - Update websockets import from deprecated
+  WebSocketServerProtocol to ServerConnection
+
+- Trigger first release
+  ([`a66d215`](https://github.com/aareman/superreload/commit/a66d215fd0cd9ef3ff29937cbbb43689a96a5449))
+
+### Refactoring
+
+- Clean up debug logging, keep useful status messages
+  ([`c24d67c`](https://github.com/aareman/superreload/commit/c24d67c462099eddde393285d7caef0427b294a6))
+
+- Rename management command args to --ws-host, --ws-port, --no-reload
+  ([`68f9ba0`](https://github.com/aareman/superreload/commit/68f9ba06948a90e732db3e41a177fd3bd36c0a4c))
+
+### Testing
+
+- Add Django integration tests for framework, middleware, and reload server
+  ([`7f0577e`](https://github.com/aareman/superreload/commit/7f0577e2c6a05788331c7bdc6c42967829bfafe7))
