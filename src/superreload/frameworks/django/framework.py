@@ -55,7 +55,17 @@ class DjangoFramework(Framework):
             from django.urls import clear_url_caches
 
             clear_url_caches()
-        except ImportError:
+
+            # Also reload the root URLconf to pick up new view references
+            from importlib import reload
+
+            from django.conf import settings
+
+            root_urlconf = settings.ROOT_URLCONF
+            if root_urlconf in sys.modules:
+                reload(sys.modules[root_urlconf])
+                clear_url_caches()
+        except Exception:
             pass
 
     def _clear_template_caches(self) -> None:
