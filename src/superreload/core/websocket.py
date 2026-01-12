@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import socket
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
@@ -17,6 +18,40 @@ except ImportError:
     ws_serve = None  # type: ignore[assignment, misc]
 
 logger = logging.getLogger(__name__)
+
+
+def is_port_available(host: str, port: int) -> bool:
+    """Check if a port is available for binding."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind((host, port))
+            return True
+    except OSError:
+        return False
+
+
+def find_available_port(host: str, start_port: int, max_attempts: int = 100) -> int:
+    """Find an available port starting from start_port.
+
+    Args:
+        host: The host to bind to.
+        start_port: The port to start searching from.
+        max_attempts: Maximum number of ports to try.
+
+    Returns:
+        An available port number.
+
+    Raises:
+        RuntimeError: If no available port is found within max_attempts.
+    """
+    for offset in range(max_attempts):
+        port = start_port + offset
+        if is_port_available(host, port):
+            return port
+    raise RuntimeError(
+        f"Could not find available port in range {start_port}-{start_port + max_attempts - 1}"
+    )
 
 
 @dataclass
@@ -130,12 +165,22 @@ class WebSocketServer:
             )
         )
 
-    async def start(self) -> None:
+    async def start(self) -> int:
+        """Start the WebSocket server, auto-selecting port if needed.
+
+        Returns:
+            The actual port the server is running on.
+        """
         if self._running:
-            return
+            return self.port
 
         if ws_serve is None:
             raise ImportError("websockets is required")
+
+        if not is_port_available(self.host, self.port):
+            old_port = self.port
+            self.port = find_available_port(self.host, self.port + 1)
+            logger.info(f"Port {old_port} in use, using {self.port} instead")
 
         self._running = True
         self._server = await ws_serve(
@@ -144,6 +189,7 @@ class WebSocketServer:
             self.port,
         )
         logger.info(f"WebSocket server started on ws://{self.host}:{self.port}{self.path}")
+        return self.port
 
     async def stop(self) -> None:
         if not self._running:
