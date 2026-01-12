@@ -73,7 +73,11 @@ class ScriptRunner:
 
     def _run_with_jurigged(self) -> int:
         """Use jurigged for surgical code object patching (default)."""
+        from types import ModuleType
+
         import jurigged
+        from jurigged import runpy as jurigged_runpy
+        from jurigged.register import registry
 
         self._running = True
         watch_paths = self._get_watch_paths()
@@ -82,10 +86,6 @@ class ScriptRunner:
         print(f"[superreload] Watching: {', '.join(str(p) for p in watch_paths)}")
         print("[superreload] Mode: jurigged (surgical patching)")
         print()
-
-        # Configure jurigged to watch our paths
-        for path in watch_paths:
-            jurigged.watch(str(path))
 
         # Setup sys.path and argv
         script_dir = str(self.config.script_path.parent)
@@ -96,16 +96,20 @@ class ScriptRunner:
         sys.argv = [str(self.config.script_path)] + self.config.script_args
 
         try:
-            main_globals: dict[str, Any] = {
-                "__name__": "__main__",
-                "__file__": str(self.config.script_path),
-                "__builtins__": __builtins__,
-            }
+            script_path = str(self.config.script_path.resolve())
 
-            with open(self.config.script_path) as f:
-                source = f.read()
-            code = compile(source, str(self.config.script_path), "exec")
-            exec(code, main_globals)
+            # Build watch pattern for script directory
+            pattern = f"{self.config.script_path.parent}/*.py"
+
+            # Register the script with jurigged's registry (this is the key!)
+            registry.prepare("__main__", script_path)
+
+            # Start watching
+            jurigged.watch(pattern=pattern)
+
+            # Create __main__ module and run via jurigged's runpy
+            main_module = ModuleType("__main__")
+            jurigged_runpy.run_path(script_path, module_object=main_module)
 
             return 0
         except SystemExit as e:
