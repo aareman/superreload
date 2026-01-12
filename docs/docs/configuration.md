@@ -24,6 +24,16 @@ Default: `9877`
 python manage.py superreload --ws-port 9999
 ```
 
+### WebSocket Path
+
+Default: `/superreload`
+
+Useful for Docker or reverse proxy setups where you need to route WebSocket traffic to a specific path:
+
+```bash
+python manage.py superreload --ws-path /my-custom-path
+```
+
 ### Disable Hot Reload
 
 Run the server without superreload:
@@ -82,4 +92,3 @@ Planned for future releases:
 - `superreload.toml` configuration file
 - Per-project watch patterns
 - Custom ignore patterns
-- WebSocket URL customization

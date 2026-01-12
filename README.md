@@ -93,6 +93,14 @@ Default host is `localhost`. Change it via:
 python manage.py superreload --ws-host 0.0.0.0
 ```
 
+### WebSocket Path
+
+Default path is `/superreload`. Useful for Docker/reverse proxy setups:
+
+```bash
+python manage.py superreload --ws-path /my-custom-path
+```
+
 ### Disable superreload
 
 Run without hot reloading:

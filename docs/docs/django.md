@@ -50,6 +50,7 @@ python manage.py superreload 0.0.0.0:8000
 |--------|-------------|
 | `--ws-host HOST` | WebSocket host (default: localhost) |
 | `--ws-port PORT` | WebSocket port (default: 9877) |
+| `--ws-path PATH` | WebSocket URL path (default: /superreload) |
 | `--no-reload` | Disable hot reloading, run normal server |
 
 ### Examples
@@ -64,8 +65,11 @@ python manage.py superreload --ws-host 0.0.0.0
 # Disable hot reloading
 python manage.py superreload --no-reload
 
+# Custom WebSocket path (useful for Docker/reverse proxy)
+python manage.py superreload --ws-path /my-custom-path
+
 # All together
-python manage.py superreload 0.0.0.0:8000 --ws-host 0.0.0.0 --ws-port 9999
+python manage.py superreload 0.0.0.0:8000 --ws-host 0.0.0.0 --ws-port 9999 --ws-path /superreload
 ```
 
 ## Manual Reload
