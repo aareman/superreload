@@ -8,12 +8,20 @@ superreload is designed to work with zero configuration, but you can customize b
 
 ## Command Line Options
 
+### WebSocket Host
+
+Default: `localhost`
+
+```bash
+python manage.py superreload --ws-host 0.0.0.0
+```
+
 ### WebSocket Port
 
 Default: `9877`
 
 ```bash
-python manage.py superreload --superreload-port 9999
+python manage.py superreload --ws-port 9999
 ```
 
 ### Disable Hot Reload
@@ -21,8 +29,17 @@ python manage.py superreload --superreload-port 9999
 Run the server without superreload:
 
 ```bash
-python manage.py superreload --no-superreload
+python manage.py superreload --no-reload
 ```
+
+## Manual Reload
+
+Trigger a manual reload at any time:
+
+| Method | Shortcut |
+|--------|----------|
+| Browser | `Ctrl+Shift+R` (or `Cmd+Shift+R` on Mac) |
+| Console | `r` + `Enter` in terminal |
 
 ## Watched Patterns
 

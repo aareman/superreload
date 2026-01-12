@@ -48,21 +48,34 @@ python manage.py superreload 0.0.0.0:8000
 
 | Option | Description |
 |--------|-------------|
-| `--superreload-port PORT` | WebSocket port (default: 9877) |
-| `--no-superreload` | Disable hot reloading, run normal server |
+| `--ws-host HOST` | WebSocket host (default: localhost) |
+| `--ws-port PORT` | WebSocket port (default: 9877) |
+| `--no-reload` | Disable hot reloading, run normal server |
 
 ### Examples
 
 ```bash
 # Custom WebSocket port
-python manage.py superreload --superreload-port 9999
+python manage.py superreload --ws-port 9999
+
+# Custom WebSocket host
+python manage.py superreload --ws-host 0.0.0.0
 
 # Disable hot reloading
-python manage.py superreload --no-superreload
+python manage.py superreload --no-reload
 
 # All together
-python manage.py superreload 0.0.0.0:8000 --superreload-port 9999
+python manage.py superreload 0.0.0.0:8000 --ws-host 0.0.0.0 --ws-port 9999
 ```
+
+## Manual Reload
+
+You can trigger a manual reload at any time:
+
+- **Browser**: Press `Ctrl+Shift+R` (or `Cmd+Shift+R` on Mac)
+- **Console**: Press `r` + `Enter` in the terminal running superreload
+
+This is useful when you want to force a reload without making file changes.
 
 ## How It Works
 

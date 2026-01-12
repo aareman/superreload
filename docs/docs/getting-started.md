@@ -88,6 +88,13 @@ By default, superreload watches for changes to:
 4. Edit a Python file and save
 5. The browser should refresh automatically
 
+## Manual Reload
+
+You can also trigger a manual reload at any time:
+
+- **Browser**: Press `Ctrl+Shift+R` (or `Cmd+Shift+R` on Mac)
+- **Console**: Press `r` + `Enter` in the terminal running superreload
+
 ## Next Steps
 
 - [Django Configuration](/docs/django) - Detailed Django setup

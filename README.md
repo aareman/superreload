@@ -10,6 +10,7 @@ superreload watches your Python files and automatically reloads modules when the
 - **Browser auto-refresh**: WebSocket-based browser refresh on file changes
 - **CSS hot reload**: Stylesheets update without page refresh
 - **Error overlay**: Beautiful error display with stack traces and local variables
+- **Keyboard shortcuts**: Manual reload via Ctrl+Shift+R (browser) or 'r' + Enter (console)
 - **Django-first**: Deep Django integration with view, template, and URL cache clearing
 - **Extensible**: Framework-agnostic core with pluggable framework adapters
 - **Zero config**: Works out of the box with sensible defaults
@@ -81,7 +82,15 @@ That's it! Edit any Python, HTML, CSS, or JS file and watch your browser update 
 Default port is `9877`. Change it via:
 
 ```bash
-python manage.py superreload --superreload-port 9999
+python manage.py superreload --ws-port 9999
+```
+
+### WebSocket Host
+
+Default host is `localhost`. Change it via:
+
+```bash
+python manage.py superreload --ws-host 0.0.0.0
 ```
 
 ### Disable superreload
@@ -89,8 +98,15 @@ python manage.py superreload --superreload-port 9999
 Run without hot reloading:
 
 ```bash
-python manage.py superreload --no-superreload
+python manage.py superreload --no-reload
 ```
+
+### Manual Reload
+
+Trigger a manual reload at any time:
+
+- **Browser**: Press `Ctrl+Shift+R` (or `Cmd+Shift+R` on Mac)
+- **Console**: Press `r` + `Enter` in the terminal running superreload
 
 ### Production
 

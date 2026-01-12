@@ -6,7 +6,7 @@
 
 ## Overview
 
-Hot reload for Django (Flask planned). Watches Python files, reloads modules in-place without server restart, auto-refreshes browser via WebSocket. CSS/JS hot reload without full page refresh.
+Hot reload for Django (Flask planned). Watches Python files, reloads modules in-place without server restart, auto-refreshes browser via WebSocket. CSS/JS hot reload without full page refresh. Manual reload via keyboard shortcuts (Ctrl+Shift+R in browser, 'r' + Enter in console).
 
 ## Structure
 
@@ -159,7 +159,7 @@ FileWatcher (watchfiles) ──→ detects changes
 ## Tests
 
 - Flat structure in `tests/`
-- Only core tests exist (no Django integration tests yet)
+- Core tests + Django integration tests in `tests/test_django.py`
 - `pytest-asyncio` with `asyncio_mode = "auto"`
 - Run: `uv run pytest -v`
 
