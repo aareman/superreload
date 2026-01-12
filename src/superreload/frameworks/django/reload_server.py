@@ -169,10 +169,14 @@ class DjangoReloadServer:
         await self.websocket.start()
         ws_url = f"ws://{self.host}:{self.websocket_port}{self.websocket_path}"
         logger.info(f"SuperReload server started on {ws_url}")
+        print(
+            f"[superreload] Watching for file changes (polling={self.force_polling})...", flush=True
+        )
 
         async for changes in self.watcher.watch():
             if not self._running:
                 break
+            print(f"[superreload] Detected changes: {[str(c.path) for c in changes]}", flush=True)
             await self._handle_file_changes(changes)
 
     def _run_in_thread(self) -> None:
