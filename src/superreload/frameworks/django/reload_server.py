@@ -181,3 +181,11 @@ class DjangoReloadServer:
         self.watcher.stop()
         if self._loop:
             self._loop.call_soon_threadsafe(self._loop.stop)
+
+    def trigger_reload(self) -> None:
+        if self._loop and self._running:
+            self._loop.call_soon_threadsafe(
+                lambda: asyncio.ensure_future(
+                    self.websocket.notify_reload(["manual"]), loop=self._loop
+                )
+            )

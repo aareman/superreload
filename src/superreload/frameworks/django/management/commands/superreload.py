@@ -1,12 +1,36 @@
 from __future__ import annotations
 
+import select
 import sys
+import threading
 from typing import Any
 
 from django.core.management import execute_from_command_line
 from django.core.management.base import BaseCommand
 
 from superreload.frameworks.django.reload_server import DjangoReloadServer
+
+
+def _start_keyboard_listener(reload_server: DjangoReloadServer, stdout: Any) -> None:
+    def keyboard_thread() -> None:
+        stdin = sys.stdin
+
+        if not stdin.isatty():
+            return
+
+        while True:
+            try:
+                readable, _, _ = select.select([stdin], [], [], 0.5)
+                if readable:
+                    char = stdin.read(1)
+                    if char.lower() == "r":
+                        stdout.write("Manual reload triggered\n")
+                        reload_server.trigger_reload()
+            except Exception:
+                break
+
+    thread = threading.Thread(target=keyboard_thread, daemon=True)
+    thread.start()
 
 
 class Command(BaseCommand):  # type: ignore[misc]
@@ -54,8 +78,10 @@ class Command(BaseCommand):  # type: ignore[misc]
                 f"Starting superreload on ws://{options['ws_host']}:{options['ws_port']}"
             )
         )
+        self.stdout.write(self.style.NOTICE("Press 'r' to trigger manual reload"))
 
         reload_server.start(background=True)
+        _start_keyboard_listener(reload_server, self.stdout)
 
         self._run_django_server(options["addrport"])
 

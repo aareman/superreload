@@ -411,6 +411,17 @@ SUPERRELOAD_JS = r"""
         if (e.key === 'Escape' && overlay) {
             dismissOverlay();
         }
+        // Ctrl+Shift+R or Cmd+Shift+R to force reload from browser
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'R') {
+            e.preventDefault();
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                showIndicator('⟳ Requesting reload...', '#3b82f6');
+                ws.send(JSON.stringify({type: 'force_reload'}));
+            } else {
+                showIndicator('⟳ Reloading...', '#3b82f6');
+                window.location.reload();
+            }
+        }
     });
 
     function showIndicator(message, color) {

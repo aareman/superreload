@@ -66,6 +66,9 @@ class WebSocketServer:
                 try:
                     msg = WebSocketMessage.from_json(str(message))
                     logger.debug(f"Received message: {msg.type}")
+                    if msg.type == "force_reload":
+                        logger.info("Manual reload requested from browser")
+                        await self.notify_reload(["manual"])
                 except json.JSONDecodeError:
                     logger.warning(f"Invalid JSON received: {message}")
         except Exception as e:
