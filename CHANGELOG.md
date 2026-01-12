@@ -1,7 +1,23 @@
 # CHANGELOG
 
 
+## v0.3.1 (2026-01-12)
+
+### Bug Fixes
+
+- Import module before reload in logging test
+  ([`8fe8471`](https://github.com/aareman/superreload/commit/8fe84711e187f50ceeb916b1970f4f13a4810d62))
+
+The test was expecting 'Reloading module' log but the module wasn't loaded yet, so it took the
+  'importing fresh' path instead.
+
+
 ## v0.3.0 (2026-01-12)
+
+### Chores
+
+- **release**: 0.3.0
+  ([`c0909ea`](https://github.com/aareman/superreload/commit/c0909ea67df4e930d39072fcce5a5b022467a35b))
 
 ### Features
 
