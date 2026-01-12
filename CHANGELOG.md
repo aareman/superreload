@@ -1,6 +1,29 @@
 # CHANGELOG
 
 
+## v0.3.0 (2026-01-12)
+
+### Features
+
+- Add --debug flag and verbose mode to Django management command
+  ([`99be65a`](https://github.com/aareman/superreload/commit/99be65ad94b81160d3c97a9f6c34bc1eb096b7b0))
+
+- Add --debug flag (equivalent to --verbosity 3) to superreload command - Integrate with Django's
+  built-in --verbosity option (0-3) - Configure Python logging based on verbosity level - Print
+  verbose config at startup with --verbosity >= 2: - Watch paths, patterns, ignore patterns - Force
+  polling status and poll delay - Django apps detected - Add debug logging throughout reload
+  operations: - Module path resolution - Module reload attempts and results - Dependency chain
+  computation - Django cache clearing (URL, template, app registry) - Add tests for verbosity
+  functionality
+
+- Auto-select available port for WebSocket server
+  ([`e7cbb92`](https://github.com/aareman/superreload/commit/e7cbb92d05e0c6bdb5d63e80f9fd82fac36a2e8c))
+
+When the default port 9877 is in use, automatically find and use the next available port. Adds
+  is_port_available() and find_available_port() utilities. WebSocketServer.start() now returns the
+  actual port used.
+
+
 ## v0.2.0 (2026-01-12)
 
 ### Bug Fixes
@@ -15,6 +38,9 @@
 
 - Add jurigged as core dependency
   ([`2e6d0d3`](https://github.com/aareman/superreload/commit/2e6d0d35c465f981db42dc7312f26c7ef4cdde6a))
+
+- **release**: 0.2.0
+  ([`512a07b`](https://github.com/aareman/superreload/commit/512a07b8c45e5230acd465d4150cae7ce4432c52))
 
 ### Continuous Integration
 
