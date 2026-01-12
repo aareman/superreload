@@ -128,6 +128,8 @@ class TestReloaderLogging:
         original_path = sys.path.copy()
         sys.path.insert(0, str(tmp_path))
         try:
+            import test_log_reload  # noqa: F401
+
             with caplog.at_level(logging.DEBUG, logger="superreload.core.reloader"):  # type: ignore[union-attr]
                 reloader.reload_modules(["test_log_reload"])
                 assert "Reloading module" in caplog.text  # type: ignore[union-attr]
