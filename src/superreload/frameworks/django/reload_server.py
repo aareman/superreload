@@ -102,12 +102,9 @@ class DjangoReloadServer:
 
     async def _handle_file_changes(self, changes: list[FileChange]) -> None:
         paths = list({c.path for c in changes})
-        print(f"[superreload] Before cooldown filter: {len(paths)} files", flush=True)
         paths = self._filter_cooldown_files(paths)
-        print(f"[superreload] After cooldown filter: {len(paths)} files", flush=True)
 
         if not paths:
-            print("[superreload] No files to process after cooldown filter", flush=True)
             return
 
         for path in paths:
@@ -122,22 +119,19 @@ class DjangoReloadServer:
         ctx = ReloadContext(changed_files=paths)
 
         if not self.framework.can_reload(ctx):
-            print("[superreload] Framework says cannot reload (migrations/settings)", flush=True)
-            logger.info("Change requires server restart (migrations/settings)")
+            print("[superreload] Change requires server restart (migrations/settings)", flush=True)
             return
 
         if py_files:
-            print(f"[superreload] Reloading {len(py_files)} Python files...", flush=True)
             self._mark_reloaded(py_files)
             self.framework.before_reload(ctx)
             result = await self.reloader.reload_from_paths(py_files)
             self.framework.after_reload(ctx, result)
 
             if result.success:
-                print(f"[superreload] SUCCESS: Reloaded {result.reloaded_modules}", flush=True)
-                logger.info(f"Reloaded: {', '.join(result.reloaded_modules)}")
+                print(f"[superreload] Reloaded: {', '.join(result.reloaded_modules)}", flush=True)
             else:
-                print(f"[superreload] FAILED: {result.errors}", flush=True)
+                print(f"[superreload] Reload failed: {result.errors}", flush=True)
                 error_details = []
                 for i, error in enumerate(result.errors):
                     module_name = (
