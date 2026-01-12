@@ -12,6 +12,8 @@ superreload watches your Python files and automatically reloads modules when the
 - **Error overlay**: Beautiful error display with stack traces and local variables
 - **Keyboard shortcuts**: Manual reload via Ctrl+Shift+R (browser) or 'r' + Enter (console)
 - **Django-first**: Deep Django integration with view, template, and URL cache clearing
+- **Script mode**: Run any Python script with hot reloading via CLI
+- **Gitignore support**: Automatically exclude files matching `.gitignore` patterns
 - **Extensible**: Framework-agnostic core with pluggable framework adapters
 - **Zero config**: Works out of the box with sensible defaults
 
@@ -120,6 +122,51 @@ Trigger a manual reload at any time:
 
 The middleware only activates when `DEBUG = True`. In production, it does nothing.
 
+## Running Python Scripts
+
+Run any Python script with hot reloading (no framework required):
+
+```bash
+superreload run script.py
+```
+
+By default, superreload uses [jurigged](https://github.com/breuleux/jurigged) for surgical code patching - your functions and classes are updated in-place while preserving state.
+
+### Watch Directories
+
+```bash
+# Watch additional directories
+superreload run script.py --watch src/ --watch lib/
+
+# Watch project, respecting .gitignore
+superreload run script.py --watch . --gitignore
+```
+
+### Reload Modes
+
+```bash
+# Default: jurigged (surgical patching, preserves state)
+superreload run script.py
+
+# Simple mode: re-execute on change (no state preservation)
+superreload run script.py --simple
+
+# Full restart: restart process on any change
+superreload run script.py --full-reload
+```
+
+### Pass Arguments to Your Script
+
+```bash
+superreload run server.py -- --port 8080 --debug
+```
+
+| Mode | Behavior | State Preserved |
+|------|----------|-----------------|
+| Default (jurigged) | Surgical code patching | Yes |
+| `--simple` | Re-execute script | No |
+| `--full-reload` | Process restart | No |
+
 ## Supported Frameworks
 
 - ✅ **Django** (4.2+)
@@ -155,10 +202,13 @@ uv run mypy src
 
 ```
 superreload/
+├── cli.py              # CLI entry point ('run' command)
 ├── core/
 │   ├── errors.py       # Error formatting with local variables
 │   ├── framework.py    # Base framework abstraction
+│   ├── gitignore.py    # Parse .gitignore files for filtering
 │   ├── reloader.py     # Python module reloading
+│   ├── script_runner.py # Run scripts with hot reload/restart
 │   ├── watcher.py      # File system watching
 │   └── websocket.py    # WebSocket server
 └── frameworks/

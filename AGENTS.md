@@ -8,6 +8,8 @@
 
 Hot reload for Django (Flask planned). Watches Python files, reloads modules in-place without server restart, auto-refreshes browser via WebSocket. CSS/JS hot reload without full page refresh. Manual reload via keyboard shortcuts (Ctrl+Shift+R in browser, 'r' + Enter in console).
 
+**CLI Mode**: Run any Python script with hot reloading via `superreload run script.py`. Supports `--watch`, `--gitignore`, `--full-reload` flags.
+
 ## Structure
 
 ```
@@ -18,7 +20,9 @@ superreload/
 │   │   ├── watcher.py      # File system watching (watchfiles)
 │   │   ├── websocket.py    # WebSocket server for browser
 │   │   ├── framework.py    # Framework base class + registry
-│   │   └── errors.py       # Error formatting with local vars
+│   │   ├── errors.py       # Error formatting with local vars
+│   │   ├── gitignore.py    # Parse .gitignore files for filtering
+│   │   └── script_runner.py # Run scripts with hot reload/restart
 │   ├── frameworks/
 │   │   └── django/         # Django adapter
 │   │       ├── framework.py      # DjangoFramework (clears caches)
@@ -27,7 +31,7 @@ superreload/
 │   │       └── management/commands/superreload.py
 │   ├── browser/
 │   │   └── client.js       # WebSocket client (22KB, embedded)
-│   └── cli.py              # CLI entry point
+│   └── cli.py              # CLI entry point ('run' command)
 ├── tests/                  # Flat, core-focused only
 └── docs/                   # Docusaurus (separate Node.js build)
 ```
@@ -43,6 +47,9 @@ superreload/
 | CSS/JS hot reload | `frameworks/django/middleware.py` | `SUPERRELOAD_JS` constant |
 | Error overlay | `core/errors.py` | `format_exception()` extracts locals |
 | Django caches | `frameworks/django/framework.py` | URL + template cache clearing |
+| CLI script running | `cli.py` + `core/script_runner.py` | `superreload run script.py`, uses jurigged by default |
+| Gitignore parsing | `core/gitignore.py` | `GitignoreParser`, `collect_gitignore_patterns()` |
+| Hot reload engine | jurigged (dependency) | Surgical code patching via `__code__` replacement |
 
 ## Commands
 
@@ -92,6 +99,7 @@ cd docs && npm ci && npm run build
 - Keep commits atomic - one concern per commit
 - Run tests before committing: `uv run pytest`
 - Pre-commit hooks auto-run ruff check + format
+- Docs MUST be updated as well
 
 **Examples:**
 ```
