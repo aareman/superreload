@@ -45,6 +45,7 @@ dependencies = [
     "jurigged>=0.6.1",
     "watchfiles>=0.21.0",
     "websockets>=12.0",
+    "typer>=0.12.0",
 ]
 
 [project.optional-dependencies]
@@ -71,7 +72,7 @@ Repository = "https://github.com/superreload/superreload"
 Issues = "https://github.com/superreload/superreload/issues"
 
 [project.scripts]
-superreload = "superreload.cli:main"
+superreload = "superreload.cli:app"
 
 [project.entry-points."superreload.frameworks"]
 django = "superreload.frameworks.django:DjangoFramework"

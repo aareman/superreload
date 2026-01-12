@@ -1,163 +1,176 @@
 from __future__ import annotations
 
-import argparse
-import sys
 from pathlib import Path
+from typing import Annotated
+
+import typer
+from rich.console import Console
+
+app = typer.Typer(
+    name="superreload",
+    help="True hot reload for Python scripts and web frameworks",
+    add_completion=True,
+    rich_markup_mode="rich",
+)
+
+console = Console()
+err_console = Console(stderr=True)
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(
-        prog="superreload",
-        description="True hot reload for Python scripts and web frameworks",
-    )
+def _log(message: str) -> None:
+    """Print styled superreload message."""
+    console.print(f"[bold cyan]\\[superreload][/bold cyan] {message}")
 
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    # Run script subcommand
-    run_parser = subparsers.add_parser(
-        "run",
-        help="Run a Python script with hot reloading",
-        description="Run a Python script with automatic hot reloading on file changes",
-    )
-    run_parser.add_argument(
-        "script",
-        type=str,
-        help="Python script to run",
-    )
-    run_parser.add_argument(
-        "--watch",
-        "-w",
-        action="append",
-        dest="watch_paths",
-        metavar="PATH",
-        help="Additional directories to watch (can be repeated)",
-    )
-    run_parser.add_argument(
-        "--gitignore",
-        action="store_true",
-        help="Use .gitignore patterns to exclude files",
-    )
-    run_parser.add_argument(
-        "--full-reload",
-        action="store_true",
-        help="Restart script on any change (instead of hot reloading modules)",
-    )
-    run_parser.add_argument(
-        "--ignore",
-        "-i",
-        action="append",
-        dest="ignore_patterns",
-        metavar="PATTERN",
-        help="Patterns to ignore (can be repeated)",
-    )
-    run_parser.add_argument(
-        "--simple",
-        action="store_true",
-        help="Use simple mode (re-execute on change) instead of jurigged",
-    )
-    run_parser.add_argument(
-        "script_args",
-        nargs="*",
-        metavar="ARGS",
-        help="Arguments to pass to the script (use -- to separate)",
-    )
+def _error(message: str) -> None:
+    """Print styled error message."""
+    err_console.print(f"[bold red]\\[superreload][/bold red] {message}")
 
-    # Django subcommand (legacy)
-    django_parser = subparsers.add_parser(
-        "django",
-        help="Run Django with hot reloading (use 'python manage.py superreload' instead)",
-    )
-    django_parser.add_argument(
-        "--port",
-        type=int,
-        default=9877,
-        help="WebSocket port for browser refresh (default: 9877)",
-    )
-    django_parser.add_argument(
-        "args",
-        nargs="*",
-        help="Additional arguments to pass to Django",
-    )
 
-    # Version subcommand
-    subparsers.add_parser("version", help="Show version")
+def _warning(message: str) -> None:
+    """Print styled warning message."""
+    console.print(f"[bold yellow]\\[superreload][/bold yellow] {message}")
 
-    # Parse args, handling -- separator for script args
-    args, remaining = parser.parse_known_args()
 
-    if args.command == "version":
+def _version_callback(value: bool) -> None:
+    """Show version and exit."""
+    if value:
         from superreload import __version__
 
-        print(f"superreload {__version__}")
-        return 0
-
-    if args.command == "run":
-        # Merge remaining args (after --) with script_args
-        script_args = (args.script_args or []) + remaining
-        return run_script(args, script_args)
-
-    if args.command == "django":
-        return run_django(args)
-
-    parser.print_help()
-    return 0
+        console.print(f"superreload [bold]{__version__}[/bold]")
+        raise typer.Exit()
 
 
-def run_script(args: argparse.Namespace, script_args: list[str]) -> int:
+@app.callback()
+def main(
+    version: Annotated[
+        bool | None,
+        typer.Option(
+            "--version",
+            "-V",
+            callback=_version_callback,
+            is_eager=True,
+            help="Show version and exit.",
+        ),
+    ] = None,
+) -> None:
+    """True hot reload for Python scripts and web frameworks."""
+    pass
+
+
+@app.command(context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
+def run(
+    ctx: typer.Context,
+    script: Annotated[Path, typer.Argument(help="Python script to run")],
+    watch: Annotated[
+        list[Path] | None,
+        typer.Option("--watch", "-w", help="Additional directories to watch (can be repeated)"),
+    ] = None,
+    gitignore: Annotated[
+        bool,
+        typer.Option("--gitignore", help="Use .gitignore patterns to exclude files"),
+    ] = False,
+    full_reload: Annotated[
+        bool,
+        typer.Option(
+            "--full-reload", help="Restart script on any change (instead of hot reloading)"
+        ),
+    ] = False,
+    ignore: Annotated[
+        list[str] | None,
+        typer.Option("--ignore", "-i", help="Patterns to ignore (can be repeated)"),
+    ] = None,
+    simple: Annotated[
+        bool,
+        typer.Option("--simple", help="Use simple mode (re-execute on change) instead of jurigged"),
+    ] = False,
+) -> None:
+    """Run a Python script with hot reloading.
+
+    Use -- to separate script arguments:
+
+        superreload run script.py -- --port 8080 --debug
+    """
+    script_args = ctx.args
+    _run_script_command(script, script_args, watch, gitignore, full_reload, ignore, simple)
+
+
+@app.command(deprecated=True)
+def django(
+    port: Annotated[
+        int,
+        typer.Option("--port", help="WebSocket port for browser refresh"),
+    ] = 9877,
+) -> None:
+    """Run Django with hot reloading.
+
+    [bold yellow]DEPRECATED:[/bold yellow] Use 'python manage.py superreload' instead.
+    """
+    _run_django_command(port)
+
+
+def _run_script_command(
+    script: Path,
+    script_args: list[str],
+    watch: list[Path] | None,
+    gitignore: bool,
+    full_reload: bool,
+    ignore: list[str] | None,
+    simple: bool,
+) -> None:
     """Run a Python script with hot reloading."""
     from superreload.core.script_runner import ScriptRunner, ScriptRunnerConfig
 
-    script_path = Path(args.script).resolve()
+    script_path = script.resolve()
     if not script_path.exists():
-        print(f"Error: Script not found: {args.script}")
-        return 1
+        _error(f"Script not found: {script}")
+        raise typer.Exit(code=1)
 
     if script_path.suffix != ".py":
-        print(f"Error: Not a Python file: {args.script}")
-        return 1
+        _error(f"Not a Python file: {script}")
+        raise typer.Exit(code=1)
 
     # Build watch paths
     watch_paths: list[Path] = []
-    if args.watch_paths:
-        for p in args.watch_paths:
-            path = Path(p).resolve()
+    if watch:
+        for p in watch:
+            path = p.resolve()
             if path.exists():
                 watch_paths.append(path)
             else:
-                print(f"Warning: Watch path does not exist: {p}")
+                _warning(f"Watch path does not exist: {p}")
 
     # Build ignore patterns
-    ignore_patterns: list[str] = []
-    if args.ignore_patterns:
-        ignore_patterns.extend(args.ignore_patterns)
+    ignore_patterns: list[str] = list(ignore) if ignore else []
 
     config = ScriptRunnerConfig(
         script_path=script_path,
         script_args=script_args,
         watch_paths=watch_paths,
-        use_gitignore=args.gitignore,
-        full_reload=args.full_reload,
+        use_gitignore=gitignore,
+        full_reload=full_reload,
         ignore_patterns=ignore_patterns,
-        simple_mode=args.simple,
+        simple_mode=simple,
     )
 
     runner = ScriptRunner(config)
 
     try:
-        return runner.run()
+        exit_code = runner.run()
+        raise typer.Exit(code=exit_code)
     except KeyboardInterrupt:
-        print("\n[superreload] Shutting down...")
+        _log("Shutting down...")
         runner.stop()
-        return 0
+        raise typer.Exit(code=0) from None
 
 
-def run_django(args: argparse.Namespace) -> int:
+def _run_django_command(port: int) -> None:
     """Run Django with hot reloading."""
     try:
         from superreload.frameworks.django import DjangoReloadServer
     except ImportError:
-        print("Django is not installed. Install with: pip install superreload[django]")
-        return 1
+        _error("Django is not installed. Install with: pip install superreload[django]")
+        raise typer.Exit(code=1) from None
 
     import os
 
@@ -168,20 +181,20 @@ def run_django(args: argparse.Namespace) -> int:
 
         django.setup()
     except Exception as e:
-        print(f"Failed to setup Django: {e}")
-        return 1
+        _error(f"Failed to setup Django: {e}")
+        raise typer.Exit(code=1) from None
 
-    server = DjangoReloadServer(websocket_port=args.port)
-    print(f"Starting superreload on ws://localhost:{args.port}")
+    server = DjangoReloadServer(websocket_port=port)
+    _log(f"Starting superreload on ws://localhost:{port}")
 
     try:
         server.start(background=False)
     except KeyboardInterrupt:
-        print("\nShutting down...")
+        _log("Shutting down...")
         server.stop()
 
-    return 0
+    raise typer.Exit(code=0)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    app()
