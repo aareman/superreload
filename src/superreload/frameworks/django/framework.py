@@ -49,6 +49,7 @@ class DjangoFramework(Framework):
         if result.success:
             self._clear_url_caches()
             self._clear_template_caches()
+            self._clear_app_registry_caches()
 
     def _clear_url_caches(self) -> None:
         try:
@@ -77,6 +78,14 @@ class DjangoFramework(Framework):
                     for loader in engine.engine.template_loaders:
                         if hasattr(loader, "reset"):
                             loader.reset()
+        except Exception:
+            pass
+
+    def _clear_app_registry_caches(self) -> None:
+        try:
+            from django.apps import apps
+
+            apps.clear_cache()
         except Exception:
             pass
 
