@@ -78,7 +78,7 @@ class Command(BaseCommand):  # type: ignore[misc]
                 f"Starting superreload on ws://{options['ws_host']}:{options['ws_port']}"
             )
         )
-        self.stdout.write(self.style.NOTICE("Press 'r' to trigger manual reload"))
+        self.stdout.write(self.style.NOTICE("Press 'r' + Enter to trigger manual reload"))
 
         reload_server.start(background=True)
         _start_keyboard_listener(reload_server, self.stdout)
