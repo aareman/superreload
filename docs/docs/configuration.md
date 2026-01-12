@@ -34,6 +34,28 @@ Useful for Docker or reverse proxy setups where you need to route WebSocket traf
 python manage.py superreload --ws-path /my-custom-path
 ```
 
+### Force Polling
+
+Default: disabled
+
+Use polling instead of filesystem notifications. **Required for Docker** with bind-mounted volumes, as inotify events don't propagate from host to container:
+
+```bash
+python manage.py superreload --force-polling
+```
+
+### Poll Delay
+
+Default: `300` (milliseconds)
+
+When using `--force-polling`, this controls how often the filesystem is checked for changes:
+
+```bash
+python manage.py superreload --force-polling --poll-delay 500
+```
+
+Lower values = faster detection but more CPU usage. The default of 300ms is a good balance.
+
 ### Disable Hot Reload
 
 Run the server without superreload:
