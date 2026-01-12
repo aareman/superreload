@@ -509,7 +509,7 @@ SUPERRELOAD_JS = r"""
     }
 
     function connect() {
-        var wsUrl = 'ws://' + window.location.hostname + ':9877';
+        var wsUrl = 'ws://' + window.location.hostname + ':' + window.__SUPERRELOAD_PORT__ + window.__SUPERRELOAD_PATH__;
         ws = new WebSocket(wsUrl);
 
         ws.onopen = function() {
@@ -559,6 +559,18 @@ SUPERRELOAD_JS = r"""
 """
 
 
+def _get_superreload_config() -> tuple[int, str]:
+    try:
+        from django.conf import settings
+
+        port = getattr(settings, "SUPERRELOAD_WS_PORT", 9877)
+        path = getattr(settings, "SUPERRELOAD_WS_PATH", "/superreload")
+    except Exception:
+        port = 9877
+        path = "/superreload"
+    return port, path
+
+
 class SuperReloadMiddleware:
     def __init__(self, get_response: Callable[[Any], Any]) -> None:
         self.get_response = get_response
@@ -590,7 +602,13 @@ class SuperReloadMiddleware:
             return
 
         if "</body>" in content:
-            content = content.replace("</body>", f"{SUPERRELOAD_JS}</body>")
+            port, path = _get_superreload_config()
+            config_script = f"""<script>
+window.__SUPERRELOAD_PORT__ = {port};
+window.__SUPERRELOAD_PATH__ = '{path}';
+</script>
+"""
+            content = content.replace("</body>", f"{config_script}{SUPERRELOAD_JS}</body>")
             response.content = content.encode("utf-8")
             if "Content-Length" in response:
                 response["Content-Length"] = len(response.content)

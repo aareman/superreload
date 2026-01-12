@@ -56,6 +56,12 @@ class Command(BaseCommand):  # type: ignore[misc]
             help="WebSocket server port (default: 9877)",
         )
         parser.add_argument(
+            "--ws-path",
+            type=str,
+            default="/superreload",
+            help="WebSocket URL path (default: /superreload)",
+        )
+        parser.add_argument(
             "--no-reload",
             action="store_true",
             default=False,
@@ -68,16 +74,18 @@ class Command(BaseCommand):  # type: ignore[misc]
             self._run_django_server(options["addrport"])
             return
 
+        ws_path = options["ws_path"]
+        if not ws_path.startswith("/"):
+            ws_path = "/" + ws_path
+
         reload_server = DjangoReloadServer(
             host=options["ws_host"],
             websocket_port=options["ws_port"],
+            websocket_path=ws_path,
         )
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Starting superreload on ws://{options['ws_host']}:{options['ws_port']}"
-            )
-        )
+        ws_url = f"ws://{options['ws_host']}:{options['ws_port']}{ws_path}"
+        self.stdout.write(self.style.SUCCESS(f"Starting superreload on {ws_url}"))
         self.stdout.write(self.style.NOTICE("Press 'r' + Enter to trigger manual reload"))
 
         reload_server.start(background=True)

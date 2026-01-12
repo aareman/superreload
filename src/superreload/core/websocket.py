@@ -38,6 +38,7 @@ class WebSocketServer:
         self,
         host: str = "localhost",
         port: int = 9877,
+        path: str = "/superreload",
         on_connect: Callable[[], None] | None = None,
         on_disconnect: Callable[[], None] | None = None,
     ) -> None:
@@ -45,6 +46,7 @@ class WebSocketServer:
             raise ImportError("websockets is required. Install with: pip install superreload")
         self.host = host
         self.port = port
+        self.path = path.rstrip("/") if path != "/" else path
         self.on_connect = on_connect
         self.on_disconnect = on_disconnect
         self._clients: set[Any] = set()
@@ -52,6 +54,14 @@ class WebSocketServer:
         self._running = False
 
     async def _handler(self, websocket: Any) -> None:
+        request = getattr(websocket, "request", None)
+        if request is not None:
+            request_path: str = getattr(request, "path", "/")
+            normalized_path = request_path.rstrip("/") if request_path != "/" else request_path
+            if normalized_path != self.path:
+                await websocket.close(1008, "Invalid path")
+                return
+
         self._clients.add(websocket)
         logger.debug(f"Client connected. Total clients: {len(self._clients)}")
 
@@ -133,7 +143,7 @@ class WebSocketServer:
             self.host,
             self.port,
         )
-        logger.info(f"WebSocket server started on ws://{self.host}:{self.port}")
+        logger.info(f"WebSocket server started on ws://{self.host}:{self.port}{self.path}")
 
     async def stop(self) -> None:
         if not self._running:

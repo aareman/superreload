@@ -27,10 +27,14 @@ class DjangoReloadServer:
         self,
         host: str = "localhost",
         websocket_port: int = 9877,
+        websocket_path: str = "/superreload",
         watch_paths: list[Path] | None = None,
     ) -> None:
         self.host = host
         self.websocket_port = websocket_port
+        self.websocket_path = websocket_path
+
+        self._configure_django_settings()
 
         self.framework = DjangoFramework()
         self.framework.setup()
@@ -50,12 +54,22 @@ class DjangoReloadServer:
         self.websocket = WebSocketServer(
             host=host,
             port=websocket_port,
+            path=websocket_path,
         )
 
         self._running = False
         self._loop: asyncio.AbstractEventLoop | None = None
         self._thread: threading.Thread | None = None
         self._recently_reloaded: dict[Path, float] = {}
+
+    def _configure_django_settings(self) -> None:
+        try:
+            from django.conf import settings
+
+            settings.SUPERRELOAD_WS_PORT = self.websocket_port
+            settings.SUPERRELOAD_WS_PATH = self.websocket_path
+        except Exception:
+            pass
 
     def _filter_cooldown_files(self, paths: list[Path]) -> list[Path]:
         now = time.time()
@@ -147,7 +161,8 @@ class DjangoReloadServer:
 
     async def _run(self) -> None:
         await self.websocket.start()
-        logger.info(f"SuperReload server started on ws://{self.host}:{self.websocket_port}")
+        ws_url = f"ws://{self.host}:{self.websocket_port}{self.websocket_path}"
+        logger.info(f"SuperReload server started on {ws_url}")
 
         async for changes in self.watcher.watch():
             if not self._running:
