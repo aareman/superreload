@@ -31,12 +31,14 @@ class DjangoReloadServer:
         watch_paths: list[Path] | None = None,
         force_polling: bool = False,
         poll_delay_ms: int = 300,
+        verbosity: int = 1,
     ) -> None:
         self.host = host
         self.websocket_port = websocket_port
         self.websocket_path = websocket_path
         self.force_polling = force_polling
         self.poll_delay_ms = poll_delay_ms
+        self.verbosity = verbosity
 
         self._configure_django_settings()
 
@@ -167,9 +169,12 @@ class DjangoReloadServer:
             await self.websocket.notify_reload(file_names)
 
     async def _run(self) -> None:
-        await self.websocket.start()
+        actual_port = await self.websocket.start()
+        if actual_port != self.websocket_port:
+            self.websocket_port = actual_port
+            self._configure_django_settings()
         ws_url = f"ws://{self.host}:{self.websocket_port}{self.websocket_path}"
-        logger.info(f"SuperReload server started on {ws_url}")
+        print(f"[superreload] WebSocket server started on {ws_url}", flush=True)
         print(
             f"[superreload] Watching for file changes (polling={self.force_polling})...", flush=True
         )

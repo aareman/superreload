@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -8,6 +9,8 @@ from superreload.core.framework import Framework, FrameworkRegistry, ReloadConte
 
 if TYPE_CHECKING:
     from superreload.core.reloader import ReloadResult
+
+logger = logging.getLogger(__name__)
 
 
 @FrameworkRegistry.register("django")
@@ -47,6 +50,7 @@ class DjangoFramework(Framework):
 
     def after_reload(self, ctx: ReloadContext, result: ReloadResult) -> None:  # noqa: ARG002
         if result.success:
+            logger.debug("Clearing Django caches after successful reload")
             self._clear_url_caches()
             self._clear_template_caches()
             self._clear_app_registry_caches()
@@ -56,8 +60,8 @@ class DjangoFramework(Framework):
             from django.urls import clear_url_caches
 
             clear_url_caches()
+            logger.debug("Cleared URL caches")
 
-            # Also reload the root URLconf to pick up new view references
             from importlib import reload
 
             from django.conf import settings
@@ -66,6 +70,7 @@ class DjangoFramework(Framework):
             if root_urlconf in sys.modules:
                 reload(sys.modules[root_urlconf])
                 clear_url_caches()
+                logger.debug(f"Reloaded root URLconf: {root_urlconf}")
         except Exception:
             pass
 
@@ -73,11 +78,15 @@ class DjangoFramework(Framework):
         try:
             from django.template.loader import engines
 
+            cleared = 0
             for engine in engines.all():
                 if hasattr(engine, "engine") and hasattr(engine.engine, "template_loaders"):
                     for loader in engine.engine.template_loaders:
                         if hasattr(loader, "reset"):
                             loader.reset()
+                            cleared += 1
+            if cleared:
+                logger.debug(f"Cleared {cleared} template loader cache(s)")
         except Exception:
             pass
 
@@ -86,6 +95,7 @@ class DjangoFramework(Framework):
             from django.apps import apps
 
             apps.clear_cache()
+            logger.debug("Cleared app registry cache")
         except Exception:
             pass
 

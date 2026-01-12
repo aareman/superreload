@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import logging
 import sys
 from dataclasses import dataclass, field
 from importlib import import_module, invalidate_caches, reload
@@ -10,6 +11,8 @@ from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from superreload.core.framework import Framework
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -40,9 +43,12 @@ class Reloader:
                 if parts[-1] == "__init__":
                     parts = parts[:-1]
                 if parts:
-                    return ".".join(parts)
+                    module_name = ".".join(parts)
+                    logger.debug(f"Resolved {path} -> {module_name}")
+                    return module_name
             except ValueError:
                 continue
+        logger.debug(f"Could not resolve module name for {path}")
         return None
 
     def get_module(self, name: str) -> ModuleType | None:
@@ -80,20 +86,25 @@ class Reloader:
     def reload_module(self, module_name: str) -> tuple[bool, Exception | None]:
         module = self.get_module(module_name)
         if module is None:
+            logger.debug(f"Module {module_name} not loaded, importing fresh")
             try:
                 import_module(module_name)
                 return True, None
             except Exception as e:
+                logger.debug(f"Import failed for {module_name}: {e}")
                 return False, e
 
         try:
+            logger.debug(f"Reloading module {module_name}")
             invalidate_caches()
             self._clear_bytecode_cache(module)
             self._clear_loader_cache(module)
             invalidate_caches()
             reload(module)
+            logger.debug(f"Successfully reloaded {module_name}")
             return True, None
         except Exception as e:
+            logger.debug(f"Reload failed for {module_name}: {e}")
             return False, e
 
     def _clear_loader_cache(self, module: ModuleType) -> None:
@@ -144,11 +155,16 @@ class Reloader:
         dependents: set[str] = set()
 
         for name in module_names:
-            for dep in self.get_dependent_modules(name):
+            deps = self.get_dependent_modules(name)
+            for dep in deps:
                 if dep not in changed_set:
                     dependents.add(dep)
+            if deps:
+                logger.debug(f"Found dependents of {name}: {deps}")
 
-        return list(module_names) + list(dependents)
+        reload_order = list(module_names) + list(dependents)
+        logger.debug(f"Reload order: {reload_order}")
+        return reload_order
 
     async def reload_from_paths(self, paths: list[Path]) -> ReloadResult:
         module_names: list[str] = []

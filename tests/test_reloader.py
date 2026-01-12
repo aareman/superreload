@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -98,3 +99,47 @@ class TestReloaderIntegration:
             sys.path = original_path
             if "test_reload_module" in sys.modules:
                 del sys.modules["test_reload_module"]
+
+
+class TestReloaderLogging:
+    def test_path_to_module_name_logs_resolution(self, tmp_path: Path, caplog: object) -> None:
+        reloader = Reloader()
+
+        test_file = tmp_path / "logged_module.py"
+        test_file.write_text("x = 1")
+
+        original_path = sys.path.copy()
+        sys.path.insert(0, str(tmp_path))
+        try:
+            with caplog.at_level(logging.DEBUG, logger="superreload.core.reloader"):  # type: ignore[union-attr]
+                result = reloader.path_to_module_name(test_file)
+                assert result == "logged_module"
+                assert "Resolved" in caplog.text  # type: ignore[union-attr]
+                assert "logged_module" in caplog.text  # type: ignore[union-attr]
+        finally:
+            sys.path = original_path
+
+    def test_reload_module_logs_activity(self, tmp_path: Path, caplog: object) -> None:
+        reloader = Reloader()
+
+        test_file = tmp_path / "test_log_reload.py"
+        test_file.write_text("VALUE = 1")
+
+        original_path = sys.path.copy()
+        sys.path.insert(0, str(tmp_path))
+        try:
+            with caplog.at_level(logging.DEBUG, logger="superreload.core.reloader"):  # type: ignore[union-attr]
+                reloader.reload_modules(["test_log_reload"])
+                assert "Reloading module" in caplog.text  # type: ignore[union-attr]
+                assert "test_log_reload" in caplog.text  # type: ignore[union-attr]
+        finally:
+            sys.path = original_path
+            if "test_log_reload" in sys.modules:
+                del sys.modules["test_log_reload"]
+
+    def test_compute_reload_order_logs_dependents(self, caplog: object) -> None:
+        reloader = Reloader()
+
+        with caplog.at_level(logging.DEBUG, logger="superreload.core.reloader"):  # type: ignore[union-attr]
+            reloader._compute_reload_order(["sys"])
+            assert "Reload order" in caplog.text  # type: ignore[union-attr]

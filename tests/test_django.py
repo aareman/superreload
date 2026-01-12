@@ -230,3 +230,71 @@ class TestWebSocketForceReload:
 
         assert parsed.type == "reload"
         assert parsed.data["files"] == ["app.py"]
+
+
+class TestDjangoReloadServerVerbosity:
+    def test_default_verbosity(self) -> None:
+        with (
+            patch(
+                "superreload.frameworks.django.reload_server.DjangoFramework"
+            ) as mock_framework_cls,
+            patch("superreload.frameworks.django.reload_server.FileWatcher"),
+            patch("superreload.frameworks.django.reload_server.WebSocketServer"),
+        ):
+            mock_framework = MagicMock()
+            mock_framework.get_watch_paths.return_value = [Path("/app")]
+            mock_framework.get_watch_patterns.return_value = ["*.py"]
+            mock_framework.get_ignore_patterns.return_value = []
+            mock_framework_cls.return_value = mock_framework
+
+            from superreload.frameworks.django.reload_server import DjangoReloadServer
+
+            server = DjangoReloadServer()
+            assert server.verbosity == 1
+
+    def test_custom_verbosity(self) -> None:
+        with (
+            patch(
+                "superreload.frameworks.django.reload_server.DjangoFramework"
+            ) as mock_framework_cls,
+            patch("superreload.frameworks.django.reload_server.FileWatcher"),
+            patch("superreload.frameworks.django.reload_server.WebSocketServer"),
+        ):
+            mock_framework = MagicMock()
+            mock_framework.get_watch_paths.return_value = [Path("/app")]
+            mock_framework.get_watch_patterns.return_value = ["*.py"]
+            mock_framework.get_ignore_patterns.return_value = []
+            mock_framework_cls.return_value = mock_framework
+
+            from superreload.frameworks.django.reload_server import DjangoReloadServer
+
+            server = DjangoReloadServer(verbosity=3)
+            assert server.verbosity == 3
+
+
+class TestSuperReloadCommandArguments:
+    def test_command_has_debug_argument(self) -> None:
+        from superreload.frameworks.django.management.commands.superreload import Command
+
+        command = Command()
+        parser = MagicMock()
+        parser.add_argument = MagicMock()
+
+        command.add_arguments(parser)
+
+        call_args_list = [call[0] for call in parser.add_argument.call_args_list]
+        debug_calls = [args for args in call_args_list if "--debug" in args]
+        assert len(debug_calls) == 1
+
+    def test_verbosity_constants_defined(self) -> None:
+        from superreload.frameworks.django.management.commands.superreload import (
+            DJANGO_VERBOSITY_DEBUG,
+            DJANGO_VERBOSITY_MINIMAL,
+            DJANGO_VERBOSITY_NORMAL,
+            DJANGO_VERBOSITY_VERBOSE,
+        )
+
+        assert DJANGO_VERBOSITY_MINIMAL == 0
+        assert DJANGO_VERBOSITY_NORMAL == 1
+        assert DJANGO_VERBOSITY_VERBOSE == 2
+        assert DJANGO_VERBOSITY_DEBUG == 3
