@@ -44,6 +44,8 @@ class FileWatcherConfig:
         ]
     )
     debounce_ms: int = 100
+    force_polling: bool = False
+    poll_delay_ms: int = 300
 
 
 class FileWatcher:
@@ -105,6 +107,8 @@ class FileWatcher:
             *watch_paths,
             debounce=self.config.debounce_ms,
             step=50,
+            force_polling=self.config.force_polling if self.config.force_polling else None,
+            poll_delay_ms=self.config.poll_delay_ms,
         ):
             if not self._running:
                 break

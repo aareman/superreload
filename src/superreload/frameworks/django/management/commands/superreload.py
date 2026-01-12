@@ -67,6 +67,18 @@ class Command(BaseCommand):  # type: ignore[misc]
             default=False,
             help="Disable hot reloading",
         )
+        parser.add_argument(
+            "--force-polling",
+            action="store_true",
+            default=False,
+            help="Use polling instead of filesystem notifications (required for Docker)",
+        )
+        parser.add_argument(
+            "--poll-delay",
+            type=int,
+            default=300,
+            help="Delay between polls in milliseconds when using --force-polling (default: 300)",
+        )
 
     def handle(self, *_args: Any, **options: Any) -> None:
         if options.get("no_reload"):
@@ -82,11 +94,15 @@ class Command(BaseCommand):  # type: ignore[misc]
             host=options["ws_host"],
             websocket_port=options["ws_port"],
             websocket_path=ws_path,
+            force_polling=options["force_polling"],
+            poll_delay_ms=options["poll_delay"],
         )
 
         ws_url = f"ws://{options['ws_host']}:{options['ws_port']}{ws_path}"
         self.stdout.write(self.style.SUCCESS(f"Starting superreload on {ws_url}"))
         self.stdout.write(self.style.NOTICE("Press 'r' + Enter to trigger manual reload"))
+        if options["force_polling"]:
+            self.stdout.write(self.style.WARNING("Using polling mode for file watching"))
 
         reload_server.start(background=True)
         _start_keyboard_listener(reload_server, self.stdout)

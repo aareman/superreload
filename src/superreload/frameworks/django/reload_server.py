@@ -29,10 +29,14 @@ class DjangoReloadServer:
         websocket_port: int = 9877,
         websocket_path: str = "/superreload",
         watch_paths: list[Path] | None = None,
+        force_polling: bool = False,
+        poll_delay_ms: int = 300,
     ) -> None:
         self.host = host
         self.websocket_port = websocket_port
         self.websocket_path = websocket_path
+        self.force_polling = force_polling
+        self.poll_delay_ms = poll_delay_ms
 
         self._configure_django_settings()
 
@@ -48,6 +52,8 @@ class DjangoReloadServer:
                 paths=paths,
                 patterns=self.framework.get_watch_patterns(),
                 ignore_patterns=self.framework.get_ignore_patterns(),
+                force_polling=force_polling,
+                poll_delay_ms=poll_delay_ms,
             )
         )
 
