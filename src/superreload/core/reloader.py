@@ -57,6 +57,9 @@ class Reloader:
         for name, module in list(sys.modules.items()):
             if module is None or name == module_name:
                 continue
+            # Skip __main__ - it can't be reloaded safely
+            if name == "__main__":
+                continue
             if not hasattr(module, "__file__") or module.__file__ is None:
                 continue
 
