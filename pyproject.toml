@@ -42,6 +42,7 @@ classifiers = [
 ]
 requires-python = ">=3.9,<4.0"
 dependencies = [
+    "jurigged>=0.6.1",
     "watchfiles>=0.21.0",
     "websockets>=12.0",
 ]
