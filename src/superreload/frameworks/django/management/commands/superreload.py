@@ -14,37 +14,44 @@ class Command(BaseCommand):  # type: ignore[misc]
 
     def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
-            "--superreload-port",
-            type=int,
-            default=9877,
-            help="WebSocket port for superreload (default: 9877)",
-        )
-        parser.add_argument(
-            "--no-superreload",
-            action="store_true",
-            default=False,
-            help="Disable superreload",
-        )
-        parser.add_argument(
             "addrport",
             nargs="?",
             default="8000",
-            help="Optional port number or ipaddr:port",
+            help="Optional port number or ipaddr:port for Django server",
+        )
+        parser.add_argument(
+            "--ws-host",
+            type=str,
+            default="localhost",
+            help="WebSocket server host (default: localhost)",
+        )
+        parser.add_argument(
+            "--ws-port",
+            type=int,
+            default=9877,
+            help="WebSocket server port (default: 9877)",
+        )
+        parser.add_argument(
+            "--no-reload",
+            action="store_true",
+            default=False,
+            help="Disable hot reloading",
         )
 
     def handle(self, *_args: Any, **options: Any) -> None:
-        if options.get("no_superreload"):
-            self.stdout.write("Running without superreload")
+        if options.get("no_reload"):
+            self.stdout.write("Running without hot reloading")
             self._run_django_server(options["addrport"])
             return
 
         reload_server = DjangoReloadServer(
-            websocket_port=options["superreload_port"],
+            host=options["ws_host"],
+            websocket_port=options["ws_port"],
         )
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"Starting superreload on ws://localhost:{options['superreload_port']}"
+                f"Starting superreload on ws://{options['ws_host']}:{options['ws_port']}"
             )
         )
 
