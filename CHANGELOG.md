@@ -1,6 +1,43 @@
 # CHANGELOG
 
 
+## v0.2.0 (2026-01-12)
+
+### Bug Fixes
+
+- Skip __main__ module in reload dependency scan
+  ([`1c1283d`](https://github.com/aareman/superreload/commit/1c1283dc0534ecacc7629ef88b4a0c68cb99d5a9))
+
+- Use jurigged registry.prepare() for proper hot reload tracking
+  ([`049e0db`](https://github.com/aareman/superreload/commit/049e0db61abbaf339046fc2cf239da85085f7ee9))
+
+### Chores
+
+- Add jurigged as core dependency
+  ([`2e6d0d3`](https://github.com/aareman/superreload/commit/2e6d0d35c465f981db42dc7312f26c7ef4cdde6a))
+
+### Continuous Integration
+
+- Skip existing packages on PyPI publish
+  ([`12ebe9a`](https://github.com/aareman/superreload/commit/12ebe9ac4d4a98fda8a92710900fcf2da32ef9da))
+
+### Documentation
+
+- Add CLI documentation and update README
+  ([`68ae43d`](https://github.com/aareman/superreload/commit/68ae43dc1ec3230aacd061d3e423f587d8087790))
+
+### Features
+
+- Add CLI for running scripts with hot reload
+  ([`858332e`](https://github.com/aareman/superreload/commit/858332eec570d45e1264b960806deae925cded10))
+
+Uses jurigged for surgical code patching by default. Supports --simple flag for re-execute mode and
+  --full-reload for process restart. Includes --watch, --gitignore, and --ignore options.
+
+- Add gitignore parser for file filtering
+  ([`39d4903`](https://github.com/aareman/superreload/commit/39d4903879d6b8724a1d05053cbb276198d1bcf3))
+
+
 ## v0.1.0 (2026-01-12)
 
 ### Bug Fixes
@@ -57,6 +94,9 @@ Previously, mtime was bumped unconditionally which caused editors to show 'file 
 
 - Remove GitHub Pages workflow, use Read the Docs only
   ([`1aa5354`](https://github.com/aareman/superreload/commit/1aa5354bcd2b7d9a9e143ef7104acadae604cc13))
+
+- **release**: 0.1.0
+  ([`ceb255e`](https://github.com/aareman/superreload/commit/ceb255ec66ec8cacd5fc2f6fc731ef1191ac2020))
 
 ### Continuous Integration
 
