@@ -93,7 +93,8 @@ class DjangoReloadServer:
         py_files = [p for p in paths if p.suffix == ".py"]
         css_files = [p for p in paths if p.suffix == ".css"]
         js_files = [p for p in paths if p.suffix == ".js"]
-        other_files = [p for p in paths if p.suffix not in (".py", ".css", ".js")]
+        html_files = [p for p in paths if p.suffix == ".html"]
+        other_files = [p for p in paths if p.suffix not in (".py", ".css", ".js", ".html")]
 
         ctx = ReloadContext(changed_files=paths)
 
@@ -133,6 +134,12 @@ class DjangoReloadServer:
             js_names = [str(p.name) for p in js_files]
             logger.info(f"JS hot reload: {', '.join(js_names)}")
             await self.websocket.notify_js_reload(js_names)
+
+        if html_files:
+            self.framework._clear_template_caches()
+            html_names = [str(p.name) for p in html_files]
+            logger.info(f"Template reload: {', '.join(html_names)}")
+            await self.websocket.notify_reload(html_names)
 
         if py_files or other_files:
             file_names = [str(p.name) for p in py_files + other_files]
