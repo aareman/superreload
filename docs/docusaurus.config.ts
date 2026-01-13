@@ -33,7 +33,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/superreload/superreload/tree/main/docs/',
+          editUrl: 'https://github.com/aareman/superreload/tree/main/docs/',
         },
         blog: false,
         theme: {
@@ -62,7 +62,7 @@ const config: Config = {
           label: 'Docs',
         },
         {
-          href: 'https://github.com/superreload/superreload',
+          href: 'https://github.com/aareman/superreload',
           label: 'GitHub',
           position: 'right',
         },
@@ -89,7 +89,7 @@ const config: Config = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/superreload/superreload',
+              href: 'https://github.com/aareman/superreload',
             },
             {
               label: 'PyPI',

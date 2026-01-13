@@ -182,7 +182,7 @@ superreload run server.py -- --port 8080 --debug
 
 ```bash
 # Clone the repo
-git clone https://github.com/superreload/superreload.git
+git clone https://github.com/aareman/superreload.git
 cd superreload
 
 # Install dependencies
