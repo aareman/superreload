@@ -1,6 +1,21 @@
 # CHANGELOG
 
 
+## v1.0.4 (2026-01-13)
+
+### Bug Fixes
+
+- Use old-style typer.Option for Python 3.9 compatibility
+  ([`9c18add`](https://github.com/aareman/superreload/commit/9c18addd94663685600c30161930409a9728bc0e))
+
+The Annotated syntax with typer.Option doesn't work properly on Python 3.9 - the short option (-V)
+  wasn't recognized and the callback wasn't firing correctly. Switch to the older typer.Option()
+  assignment syntax which works on all Python versions.
+
+Also use typer.echo() instead of Rich console for version output to ensure proper capture in test
+  runners.
+
+
 ## v1.0.3 (2026-01-13)
 
 ### Bug Fixes
@@ -10,6 +25,11 @@
 
 Typer uses get_type_hints() at runtime which evaluates annotations, causing TypeError on Python 3.9
   when using the | union syntax. Changed to Optional[List[...]] for compatibility.
+
+### Chores
+
+- **release**: 1.0.3
+  ([`43b409b`](https://github.com/aareman/superreload/commit/43b409b7cfc0ca98c64224120b42c284cc4fdeef))
 
 ### Documentation
 
