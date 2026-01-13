@@ -1,7 +1,7 @@
 # SUPERRELOAD - Project Knowledge Base
 
-**Generated:** 2026-01-09
-**Commit:** d115638
+**Generated:** 2026-01-13
+**Commit:** 3f167ed
 **Branch:** main
 
 ## Overview
@@ -48,6 +48,7 @@ superreload/
 | Error overlay | `core/errors.py` | `format_exception()` extracts locals |
 | Django caches | `frameworks/django/framework.py` | URL + template cache clearing |
 | CLI script running | `cli.py` + `core/script_runner.py` | `superreload run script.py`, uses jurigged by default |
+| Script reload modes | `core/script_runner.py` | 3 modes: jurigged (surgical), simple (re-execute), full-reload (restart) |
 | Gitignore parsing | `core/gitignore.py` | `GitignoreParser`, `collect_gitignore_patterns()` |
 | Hot reload engine | jurigged (dependency) | Surgical code patching via `__code__` replacement |
 
@@ -119,6 +120,7 @@ ci: add Python 3.13 to test matrix
 | Reload settings.py | Blocked - causes Django to break |
 | Suppress type errors | No `as any`, `@ts-ignore` |
 | Edit `browser/client.js` without updating middleware | `SUPERRELOAD_JS` in middleware.py is the source of truth |
+| Rapid file saves | Cooldown system blocks reloads within 1s of previous reload |
 
 ## Architecture Flow
 
@@ -164,6 +166,15 @@ FileWatcher (watchfiles) ──→ detects changes
    ```
 4. Create middleware for JS injection
 
+**Framework lifecycle hooks (7 phases):**
+1. `setup()` → Initialize framework state
+2. `can_reload()` → Veto reload (block migrations, settings.py)
+3. `before_reload()` → Pre-reload preparation
+4. `after_reload()` → Cache clearing (URLs, templates, app registry)
+5. `get_watch_paths()` → Directories to monitor
+6. `get_watch_patterns()` → File patterns (`*.py`, `*.html`, etc.)
+7. `get_ignore_patterns()` → Files to skip
+
 ## Tests
 
 - Flat structure in `tests/`
@@ -183,6 +194,6 @@ All must pass. Pre-commit hooks run ruff on commit.
 ## Gotchas
 
 - Directory named `reloadium`, package named `superreload` (rebrand in progress)
-- `browser/client.js` exists but middleware.py embeds its own copy as `SUPERRELOAD_JS`
+- `browser/client.js` (622 lines) exists but is NOT used at runtime; `SUPERRELOAD_JS` in middleware.py is the source of truth
 - Docs use Docusaurus (Node.js), not Sphinx - separate build system
 - RTD serves from `/en/latest/` - baseUrl is dynamic in docusaurus.config.ts
