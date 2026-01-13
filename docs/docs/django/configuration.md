@@ -50,6 +50,50 @@ python manage.py superreload --no-reload
 python manage.py superreload 0.0.0.0:8000 --ws-host 0.0.0.0 --ws-port 9999
 ```
 
+## Django Settings
+
+You can configure superreload in your `settings.py` file. These settings are optional and have sensible defaults.
+
+### Available Settings
+
+| Setting | Default | Type | Description |
+|---------|---------|------|-------------|
+| `SUPERRELOAD_WS_PORT` | `9877` | `int` | WebSocket server port for browser communication |
+| `SUPERRELOAD_WS_HOST` | `"localhost"` | `str` | WebSocket host (use `"0.0.0.0"` for Docker) |
+| `SUPERRELOAD_WS_PATH` | `"/superreload"` | `str` | WebSocket URL path |
+| `SUPERRELOAD_WS_SECURE` | `False` | `bool` | Use secure WebSocket (`wss://`) instead of `ws://` |
+
+### Example
+
+```python
+# settings.py
+
+# WebSocket configuration (all optional)
+SUPERRELOAD_WS_PORT = 9999          # Custom port
+SUPERRELOAD_WS_HOST = "0.0.0.0"     # For Docker/external access
+SUPERRELOAD_WS_PATH = "/ws/reload"  # Custom path (useful for reverse proxy)
+SUPERRELOAD_WS_SECURE = True        # Use wss:// (for HTTPS sites)
+```
+
+### When to Use Settings vs Command Line
+
+- **Settings**: Use when you want consistent configuration across your team or in Docker Compose
+- **Command line**: Use for quick one-off overrides or local development
+
+Command-line options take precedence over settings.py values.
+
+### Docker Example
+
+For Docker environments, you typically need to expose the WebSocket host:
+
+```python
+# settings.py
+import os
+
+if os.environ.get("DOCKER"):
+    SUPERRELOAD_WS_HOST = "0.0.0.0"
+```
+
 ## Manual Reload
 
 Trigger a manual reload at any time:
