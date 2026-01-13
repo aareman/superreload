@@ -1,12 +1,45 @@
 # CHANGELOG
 
 
+## v1.0.1 (2026-01-13)
+
+### Bug Fixes
+
+- **test**: Disable ANSI colors in CLI tests for CI compatibility
+  ([`cec9e18`](https://github.com/aareman/superreload/commit/cec9e18580e21f63b3395618ce7689c7f7f08e7c))
+
+### Documentation
+
+- Fix broken links to django subsection pages
+  ([`d42a6ed`](https://github.com/aareman/superreload/commit/d42a6ed14218c631408dc5fedfb56836b9f31597))
+
+- Restructure Django docs into subsections
+  ([`17e4a79`](https://github.com/aareman/superreload/commit/17e4a79e808dca3be86e00fee5da6eb9b5f9a702))
+
+- Create docs/docs/django/ directory with category config - Split django.md into focused
+  subsections: - index.md: overview, installation, quick start - configuration.md: CLI options,
+  watched patterns - css-hot-reload.md: CSS hot reload details - error-overlay.md: error overlay
+  features - docker.md: Docker setup and polling - limitations.md: limitations and troubleshooting -
+  Remove flask.md (placeholder) - Remove old root-level files that moved to django/
+
+- Update AGENTS.md with new discoveries
+  ([`d8fd335`](https://github.com/aareman/superreload/commit/d8fd335d5179901bcfeffe343b6f8a986be7e778))
+
+- Update pypi links
+  ([`ed220a9`](https://github.com/aareman/superreload/commit/ed220a96298c5000237393c4fa5946e5472f58c1))
+
+
 ## v1.0.0 (2026-01-12)
 
 ### Build System
 
 - Autoenable python venv
   ([`3f167ed`](https://github.com/aareman/superreload/commit/3f167ed45f9767c91a2dccb29128a2d5dcd3037a))
+
+### Chores
+
+- **release**: 1.0.0
+  ([`027f351`](https://github.com/aareman/superreload/commit/027f351bf022fbe1f80c628043fd6202bcf6ed02))
 
 ### Features
 
