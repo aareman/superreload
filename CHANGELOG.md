@@ -1,12 +1,25 @@
 # CHANGELOG
 
 
+## v1.0.2 (2026-01-13)
+
+### Bug Fixes
+
+- Correct GitHub URLs to aareman/superreload
+  ([`e064b46`](https://github.com/aareman/superreload/commit/e064b4610cd4e8fc2e6dba0d9864dd28a27b9363))
+
+
 ## v1.0.1 (2026-01-13)
 
 ### Bug Fixes
 
 - **test**: Disable ANSI colors in CLI tests for CI compatibility
   ([`cec9e18`](https://github.com/aareman/superreload/commit/cec9e18580e21f63b3395618ce7689c7f7f08e7c))
+
+### Chores
+
+- **release**: 1.0.1
+  ([`b8d43b1`](https://github.com/aareman/superreload/commit/b8d43b1e02def884c83e361903df5e61e1d5e4fc))
 
 ### Documentation
 
