@@ -98,5 +98,5 @@ You can also trigger a manual reload at any time:
 ## Next Steps
 
 - [Django Configuration](/docs/django) - Detailed Django setup
-- [CSS Hot Reload](/docs/css-hot-reload) - How CSS hot reload works
-- [Error Overlay](/docs/error-overlay) - Understanding the error overlay
+- [CSS Hot Reload](/docs/django/css-hot-reload) - How CSS hot reload works
+- [Error Overlay](/docs/django/error-overlay) - Understanding the error overlay
