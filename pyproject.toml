@@ -66,10 +66,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/superreload/superreload"
-Documentation = "https://github.com/superreload/superreload#readme"
-Repository = "https://github.com/superreload/superreload"
-Issues = "https://github.com/superreload/superreload/issues"
+Homepage = "https://github.com/aareman/superreload"
+Documentation = "https://superreload.readthedocs.io/en/latest/"
+Repository = "https://github.com/aareman/superreload"
+Issues = "https://github.com/aareman/superreload/issues"
 
 [project.scripts]
 superreload = "superreload.cli:app"
