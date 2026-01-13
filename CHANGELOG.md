@@ -1,12 +1,33 @@
 # CHANGELOG
 
 
+## v1.0.3 (2026-01-13)
+
+### Bug Fixes
+
+- Use Python 3.9 compatible type annotations in CLI
+  ([`7b9fb6d`](https://github.com/aareman/superreload/commit/7b9fb6dc39005b2720bdcfbd234ef25496f00a97))
+
+Typer uses get_type_hints() at runtime which evaluates annotations, causing TypeError on Python 3.9
+  when using the | union syntax. Changed to Optional[List[...]] for compatibility.
+
+### Documentation
+
+- Add Django settings.py configuration section
+  ([`9e296d5`](https://github.com/aareman/superreload/commit/9e296d5eb0273c12240edea0d97213815c481192))
+
+
 ## v1.0.2 (2026-01-13)
 
 ### Bug Fixes
 
 - Correct GitHub URLs to aareman/superreload
   ([`e064b46`](https://github.com/aareman/superreload/commit/e064b4610cd4e8fc2e6dba0d9864dd28a27b9363))
+
+### Chores
+
+- **release**: 1.0.2
+  ([`4dd1e98`](https://github.com/aareman/superreload/commit/4dd1e98d60b7ad0fb64f3870d83266e7a730f3b5))
 
 
 ## v1.0.1 (2026-01-13)
