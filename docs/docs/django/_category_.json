@@ -1,0 +1,9 @@
+{
+  "label": "Django",
+  "position": 3,
+  "collapsed": false,
+  "link": {
+    "type": "generated-index",
+    "description": "Complete guide for using superreload with Django."
+  }
+}
