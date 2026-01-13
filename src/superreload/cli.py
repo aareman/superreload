@@ -40,25 +40,26 @@ def _version_callback(value: bool) -> None:
     if value:
         from superreload import __version__
 
-        console.print(f"superreload [bold]{__version__}[/bold]")
+        typer.echo(f"superreload {__version__}")
         raise typer.Exit()
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def main(
-    version: Annotated[
-        Optional[bool],
-        typer.Option(
-            "--version",
-            "-V",
-            callback=_version_callback,
-            is_eager=True,
-            help="Show version and exit.",
-        ),
-    ] = None,
+    ctx: typer.Context,
+    version: bool = typer.Option(
+        False,
+        "--version",
+        "-V",
+        callback=_version_callback,
+        is_eager=True,
+        help="Show version and exit.",
+    ),
 ) -> None:
     """True hot reload for Python scripts and web frameworks."""
-    pass
+    if ctx.invoked_subcommand is None and not version:
+        # No subcommand and no version flag - show help
+        raise typer.Exit(0)
 
 
 @app.command(context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
