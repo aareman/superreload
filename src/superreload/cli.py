@@ -1,7 +1,10 @@
+# ruff: noqa: UP006, UP035, UP045
+# Using Optional/List instead of | union syntax for Python 3.9 compatibility.
+# Typer uses get_type_hints() at runtime which evaluates annotations.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, List, Optional
 
 import typer
 from rich.console import Console
@@ -44,7 +47,7 @@ def _version_callback(value: bool) -> None:
 @app.callback()
 def main(
     version: Annotated[
-        bool | None,
+        Optional[bool],
         typer.Option(
             "--version",
             "-V",
@@ -63,7 +66,7 @@ def run(
     ctx: typer.Context,
     script: Annotated[Path, typer.Argument(help="Python script to run")],
     watch: Annotated[
-        list[Path] | None,
+        Optional[List[Path]],
         typer.Option("--watch", "-w", help="Additional directories to watch (can be repeated)"),
     ] = None,
     gitignore: Annotated[
@@ -77,7 +80,7 @@ def run(
         ),
     ] = False,
     ignore: Annotated[
-        list[str] | None,
+        Optional[List[str]],
         typer.Option("--ignore", "-i", help="Patterns to ignore (can be repeated)"),
     ] = None,
     simple: Annotated[
@@ -112,10 +115,10 @@ def django(
 def _run_script_command(
     script: Path,
     script_args: list[str],
-    watch: list[Path] | None,
+    watch: Optional[List[Path]],
     gitignore: bool,
     full_reload: bool,
-    ignore: list[str] | None,
+    ignore: Optional[List[str]],
     simple: bool,
 ) -> None:
     """Run a Python script with hot reloading."""
