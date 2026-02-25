@@ -12,11 +12,11 @@ Running superreload in Docker requires special configuration because Docker bind
 python manage.py superreload 0.0.0.0:8000 --ws-host 0.0.0.0 --force-polling
 ```
 
-| Flag | Why It's Needed |
-|------|-----------------|
-| `0.0.0.0:8000` | Binds Django server to all interfaces |
+| Flag                | Why It's Needed                                                                                      |
+| ------------------- | ---------------------------------------------------------------------------------------------------- |
+| `0.0.0.0:8000`      | Binds Django server to all interfaces                                                                |
 | `--ws-host 0.0.0.0` | Binds WebSocket server to all interfaces so the browser can connect through Docker's port forwarding |
-| `--force-polling` | Uses polling instead of inotify, which doesn't work with Docker bind mounts |
+| `--force-polling`   | Uses polling instead of inotify, which doesn't work with Docker bind mounts                          |
 
 ## Docker Compose Example
 
@@ -26,7 +26,7 @@ services:
     build: .
     ports:
       - "8000:8000"
-      - "9877:9877"  # WebSocket port
+      - "9877:9877" # WebSocket port
     volumes:
       - .:/app
     command: python manage.py superreload 0.0.0.0:8000 --ws-host 0.0.0.0 --force-polling
@@ -58,3 +58,11 @@ python manage.py superreload --force-polling --poll-delay 500
 ```
 
 Lower values = faster detection but more CPU usage. The default of 300ms is a good balance.
+
+## Reverse Proxy in Docker
+
+If you're running Django behind a reverse proxy (nginx, etc.) in Docker, see the [Reverse Proxy Configuration](configuration.md#reverse-proxy-configuration) section for additional setup steps. You'll typically need to:
+
+1. Configure the proxy to forward WebSocket connections
+2. Set `SUPERRELOAD_PROXIED = True` to omit the port from the browser's WebSocket URL
+3. Use `SUPERRELOAD_WS_SECURE = True` if the proxy terminates HTTPS
