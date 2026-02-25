@@ -509,9 +509,8 @@ SUPERRELOAD_JS = r"""
     }
 
     function connect() {
-        var wsHost = window.__SUPERRELOAD_HOST__ || 'localhost';
-        var wsProtocol = window.__SUPERRELOAD_SECURE__ ? 'wss://' : 'ws://';
-        var wsUrl = wsProtocol + wsHost + ':' + window.__SUPERRELOAD_PORT__ + window.__SUPERRELOAD_PATH__;
+        var wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        var wsUrl = wsProtocol + window.location.host + window.__SUPERRELOAD_PATH__;
         ws = new WebSocket(wsUrl);
 
         ws.onopen = function() {
