@@ -511,7 +511,8 @@ SUPERRELOAD_JS = r"""
     function connect() {
         var wsHost = window.__SUPERRELOAD_HOST__ || 'localhost';
         var wsProtocol = window.__SUPERRELOAD_SECURE__ ? 'wss://' : 'ws://';
-        var wsUrl = wsProtocol + wsHost + ':' + window.__SUPERRELOAD_PORT__ + window.__SUPERRELOAD_PATH__;
+        var wsPort = window.__SUPERRELOAD_PORT__ ? ':' + window.__SUPERRELOAD_PORT__ : '';
+        var wsUrl = wsProtocol + wsHost + wsPort + window.__SUPERRELOAD_PATH__;
         ws = new WebSocket(wsUrl);
 
         ws.onopen = function() {
@@ -561,11 +562,12 @@ SUPERRELOAD_JS = r"""
 """
 
 
-def _get_superreload_config() -> tuple[int, str, str, bool]:
+def _get_superreload_config() -> tuple[int | None, str, str, bool]:
     try:
         from django.conf import settings
 
-        port = getattr(settings, "SUPERRELOAD_WS_PORT", 9877)
+        proxied = getattr(settings, "SUPERRELOAD_PROXIED", False)
+        port = None if proxied else getattr(settings, "SUPERRELOAD_WS_PORT", 9877)
         path = getattr(settings, "SUPERRELOAD_WS_PATH", "/superreload")
         host = getattr(settings, "SUPERRELOAD_WS_HOST", "localhost")
         secure = getattr(settings, "SUPERRELOAD_WS_SECURE", False)
@@ -609,9 +611,10 @@ class SuperReloadMiddleware:
 
         if "</body>" in content:
             port, path, host, secure = _get_superreload_config()
+            port_js = "null" if port is None else port
             secure_js = "true" if secure else "false"
             config_script = f"""<script>
-window.__SUPERRELOAD_PORT__ = {port};
+window.__SUPERRELOAD_PORT__ = {port_js};
 window.__SUPERRELOAD_PATH__ = '{path}';
 window.__SUPERRELOAD_HOST__ = '{host}';
 window.__SUPERRELOAD_SECURE__ = {secure_js};

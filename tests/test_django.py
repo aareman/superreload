@@ -8,7 +8,11 @@ import pytest
 from superreload.core.framework import ReloadContext
 from superreload.core.reloader import ReloadResult
 from superreload.frameworks.django.framework import DjangoFramework
-from superreload.frameworks.django.middleware import SUPERRELOAD_JS, SuperReloadMiddleware
+from superreload.frameworks.django.middleware import (
+    SUPERRELOAD_JS,
+    SuperReloadMiddleware,
+    _get_superreload_config,
+)
 
 
 class TestDjangoFramework:
@@ -146,6 +150,36 @@ class TestSuperReloadMiddleware:
     def test_js_contains_keyboard_shortcuts(self) -> None:
         assert "Escape" in SUPERRELOAD_JS
         assert "force_reload" in SUPERRELOAD_JS
+
+    def test_get_superreload_config_proxied_omits_port(self) -> None:
+        class MockSettings:
+            SUPERRELOAD_PROXIED = True
+
+        with patch("django.conf.settings", MockSettings()):
+            port, path, host, secure = _get_superreload_config()
+
+        assert port is None
+
+    def test_get_superreload_config_not_proxied_uses_ws_port(self) -> None:
+        class MockSettings:
+            SUPERRELOAD_WS_PORT = 9999
+
+        with patch("django.conf.settings", MockSettings()):
+            port, path, host, secure = _get_superreload_config()
+
+        assert port == 9999
+
+    def test_get_superreload_config_defaults(self) -> None:
+        class MockSettings:
+            pass
+
+        with patch("django.conf.settings", MockSettings()):
+            port, path, host, secure = _get_superreload_config()
+
+        assert port == 9877
+        assert path == "/superreload"
+        assert host == "localhost"
+        assert secure is False
 
 
 class TestDjangoReloadServer:
