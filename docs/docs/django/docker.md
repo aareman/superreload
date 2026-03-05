@@ -64,5 +64,5 @@ Lower values = faster detection but more CPU usage. The default of 300ms is a go
 If you're running Django behind a reverse proxy (nginx, etc.) in Docker, see the [Reverse Proxy Configuration](configuration.md#reverse-proxy-configuration) section for additional setup steps. You'll typically need to:
 
 1. Configure the proxy to forward WebSocket connections
-2. Set `SUPERRELOAD_PROXIED = True` to omit the port from the browser's WebSocket URL
+2. Use `--ws-frontend-host` to set the browser's WebSocket host (omitting the port)
 3. Use `SUPERRELOAD_WS_SECURE = True` if the proxy terminates HTTPS

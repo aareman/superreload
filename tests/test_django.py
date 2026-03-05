@@ -8,6 +8,7 @@ import pytest
 from superreload.core.framework import ReloadContext
 from superreload.core.reloader import ReloadResult
 from superreload.frameworks.django.framework import DjangoFramework
+from superreload.frameworks.django.management.commands.superreload import _parse_host_port
 from superreload.frameworks.django.middleware import (
     SUPERRELOAD_JS,
     SuperReloadMiddleware,
@@ -151,23 +152,34 @@ class TestSuperReloadMiddleware:
         assert "Escape" in SUPERRELOAD_JS
         assert "force_reload" in SUPERRELOAD_JS
 
-    def test_get_superreload_config_proxied_omits_port(self) -> None:
+    def test_get_superreload_config_uses_frontend_port(self) -> None:
         class MockSettings:
-            SUPERRELOAD_PROXIED = True
-
-        with patch("django.conf.settings", MockSettings()):
-            port, path, host, secure = _get_superreload_config()
-
-        assert port is None
-
-    def test_get_superreload_config_not_proxied_uses_ws_port(self) -> None:
-        class MockSettings:
-            SUPERRELOAD_WS_PORT = 9999
+            SUPERRELOAD_WS_FRONTEND_PORT = 9999
 
         with patch("django.conf.settings", MockSettings()):
             port, path, host, secure = _get_superreload_config()
 
         assert port == 9999
+
+    def test_get_superreload_config_uses_frontend_host(self) -> None:
+        class MockSettings:
+            SUPERRELOAD_WS_FRONTEND_HOST = "example.com"
+
+        with patch("django.conf.settings", MockSettings()):
+            port, path, host, secure = _get_superreload_config()
+
+        assert host == "example.com"
+
+    def test_get_superreload_config_frontend_port_none(self) -> None:
+        class MockSettings:
+            SUPERRELOAD_WS_FRONTEND_HOST = "example.com"
+            SUPERRELOAD_WS_FRONTEND_PORT = None
+
+        with patch("django.conf.settings", MockSettings()):
+            port, path, host, secure = _get_superreload_config()
+
+        assert host == "example.com"
+        assert port is None
 
     def test_get_superreload_config_defaults(self) -> None:
         class MockSettings:
@@ -332,3 +344,15 @@ class TestSuperReloadCommandArguments:
         assert DJANGO_VERBOSITY_NORMAL == 1
         assert DJANGO_VERBOSITY_VERBOSE == 2
         assert DJANGO_VERBOSITY_DEBUG == 3
+
+
+class TestParseHostPort:
+    def test_host_only(self) -> None:
+        host, port = _parse_host_port("localhost")
+        assert host == "localhost"
+        assert port is None
+
+    def test_host_and_port(self) -> None:
+        host, port = _parse_host_port("0.0.0.0:9999")
+        assert host == "0.0.0.0"
+        assert port == 9999

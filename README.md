@@ -79,20 +79,12 @@ That's it! Edit any Python, HTML, CSS, or JS file and watch your browser update 
 
 ## Configuration
 
-### WebSocket Port
+### WebSocket Host and Port
 
-Default port is `9877`. Change it via:
-
-```bash
-python manage.py superreload --ws-port 9999
-```
-
-### WebSocket Host
-
-Default host is `localhost`. Change it via:
+Default is `localhost:9877`. Change it via:
 
 ```bash
-python manage.py superreload --ws-host 0.0.0.0
+python manage.py superreload --ws-host 0.0.0.0:9999
 ```
 
 ### WebSocket Path
@@ -161,11 +153,11 @@ superreload run script.py --full-reload
 superreload run server.py -- --port 8080 --debug
 ```
 
-| Mode | Behavior | State Preserved |
-|------|----------|-----------------|
-| Default (jurigged) | Surgical code patching | Yes |
-| `--simple` | Re-execute script | No |
-| `--full-reload` | Process restart | No |
+| Mode               | Behavior               | State Preserved |
+| ------------------ | ---------------------- | --------------- |
+| Default (jurigged) | Surgical code patching | Yes             |
+| `--simple`         | Re-execute script      | No              |
+| `--full-reload`    | Process restart        | No              |
 
 ## Supported Frameworks
 
