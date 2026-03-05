@@ -1,6 +1,6 @@
 [project]
 name = "superreload"
-version = "1.0.4"
+version = "2.0.0"
 description = "True hot reload for Django and Python web frameworks - no server restart needed"
 readme = "README.md"
 license = {text = "MIT"}

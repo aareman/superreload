@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v2.0.0 (2026-03-05)
+
+### Features
+
+- Add SUPERRELOAD_PROXIED setting for reverse proxy support
+  ([`785a22e`](https://github.com/aareman/superreload/commit/785a22ec7c66d44d18eb686f44d3f5fa52e34152))
+
+- Switch to --ws-host and --ws-frontend-host cli options
+  ([`700b159`](https://github.com/aareman/superreload/commit/700b15950325085830c5a89cf313479e8c2bbefd))
+
+### Refactoring
+
+- Build WebSocket URL in Python instead of JavaScript
+  ([`09b3757`](https://github.com/aareman/superreload/commit/09b3757df351d802934efb68bb55d096f4f8e0e8))
+
+
 ## v1.0.4 (2026-01-13)
 
 ### Bug Fixes
@@ -14,6 +30,11 @@ The Annotated syntax with typer.Option doesn't work properly on Python 3.9 - the
 
 Also use typer.echo() instead of Rich console for version output to ensure proper capture in test
   runners.
+
+### Chores
+
+- **release**: 1.0.4
+  ([`f288bdb`](https://github.com/aareman/superreload/commit/f288bdb830d812362a97062e5b3342e37c10df0b))
 
 
 ## v1.0.3 (2026-01-13)
