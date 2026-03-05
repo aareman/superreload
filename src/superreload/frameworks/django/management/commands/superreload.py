@@ -16,6 +16,19 @@ DJANGO_VERBOSITY_NORMAL = 1
 DJANGO_VERBOSITY_VERBOSE = 2
 DJANGO_VERBOSITY_DEBUG = 3
 
+DEFAULT_WS_PORT = 9877
+
+
+def _parse_host_port(value: str) -> tuple[str, int | None]:
+    """Parse a HOST or HOST:PORT string into (host, port).
+
+    If no port is included, returns None for the port.
+    """
+    if ":" in value:
+        host, port_str = value.rsplit(":", 1)
+        return host, int(port_str)
+    return value, None
+
 
 def _start_keyboard_listener(reload_server: DjangoReloadServer, stdout: Any) -> None:
     def keyboard_thread() -> None:
@@ -53,13 +66,17 @@ class Command(BaseCommand):  # type: ignore[misc]
             "--ws-host",
             type=str,
             default="localhost",
-            help="WebSocket server host (default: localhost)",
+            help="WebSocket server bind address as HOST[:PORT] (default: localhost:9877)",
         )
         parser.add_argument(
-            "--ws-port",
-            type=int,
-            default=9877,
-            help="WebSocket server port (default: 9877)",
+            "--ws-frontend-host",
+            type=str,
+            default=None,
+            help=(
+                "WebSocket address for browser connections as HOST[:PORT]. "
+                "Defaults to the --ws-host value. Use when running behind a reverse proxy "
+                "(e.g. --ws-frontend-host example.com omits port from browser URL)"
+            ),
         )
         parser.add_argument(
             "--ws-path",
@@ -108,10 +125,20 @@ class Command(BaseCommand):  # type: ignore[misc]
         if not ws_path.startswith("/"):
             ws_path = "/" + ws_path
 
+        ws_host, ws_port = _parse_host_port(options["ws_host"])
+        ws_port = ws_port or DEFAULT_WS_PORT
+
+        frontend_host = None
+        frontend_port = None
+        if options["ws_frontend_host"] is not None:
+            frontend_host, frontend_port = _parse_host_port(options["ws_frontend_host"])
+
         reload_server = DjangoReloadServer(
-            host=options["ws_host"],
-            websocket_port=options["ws_port"],
+            host=ws_host,
+            websocket_port=ws_port,
             websocket_path=ws_path,
+            frontend_host=frontend_host,
+            frontend_port=frontend_port,
             force_polling=options["force_polling"],
             poll_delay_ms=options["poll_delay"],
             verbosity=verbosity,

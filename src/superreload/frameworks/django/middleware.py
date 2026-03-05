@@ -566,10 +566,9 @@ def _get_superreload_config() -> tuple[int | None, str, str, bool]:
     try:
         from django.conf import settings
 
-        proxied = getattr(settings, "SUPERRELOAD_PROXIED", False)
-        port = None if proxied else getattr(settings, "SUPERRELOAD_WS_PORT", 9877)
+        host = getattr(settings, "SUPERRELOAD_WS_FRONTEND_HOST", "localhost")
+        port = getattr(settings, "SUPERRELOAD_WS_FRONTEND_PORT", 9877)
         path = getattr(settings, "SUPERRELOAD_WS_PATH", "/superreload")
-        host = getattr(settings, "SUPERRELOAD_WS_HOST", "localhost")
         secure = getattr(settings, "SUPERRELOAD_WS_SECURE", False)
     except Exception:
         port = 9877

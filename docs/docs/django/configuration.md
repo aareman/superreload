@@ -22,20 +22,20 @@ python manage.py superreload 0.0.0.0:8000
 
 ### All Options
 
-| Option            | Default        | Description                                         |
-| ----------------- | -------------- | --------------------------------------------------- |
-| `--ws-host HOST`  | `localhost`    | WebSocket host                                      |
-| `--ws-port PORT`  | `9877`         | WebSocket port                                      |
-| `--ws-path PATH`  | `/superreload` | WebSocket URL path                                  |
-| `--force-polling` | disabled       | Use polling for file watching (required for Docker) |
-| `--poll-delay MS` | `300`          | Polling interval in milliseconds                    |
-| `--no-reload`     | disabled       | Disable hot reloading, run normal server            |
+| Option                           | Default          | Description                                                   |
+| -------------------------------- | ---------------- | ------------------------------------------------------------- |
+| `--ws-host HOST[:PORT]`          | `localhost:9877` | WebSocket server bind address                                 |
+| `--ws-frontend-host HOST[:PORT]` | same as ws-host  | WebSocket address for browser connections (for reverse proxy) |
+| `--ws-path PATH`                 | `/superreload`   | WebSocket URL path                                            |
+| `--force-polling`                | disabled         | Use polling for file watching (required for Docker)           |
+| `--poll-delay MS`                | `300`            | Polling interval in milliseconds                              |
+| `--no-reload`                    | disabled         | Disable hot reloading, run normal server                      |
 
 ### Examples
 
 ```bash
 # Custom WebSocket port
-python manage.py superreload --ws-port 9999
+python manage.py superreload --ws-host localhost:9999
 
 # Custom WebSocket host (for Docker)
 python manage.py superreload --ws-host 0.0.0.0
@@ -43,11 +43,11 @@ python manage.py superreload --ws-host 0.0.0.0
 # Custom WebSocket path (useful for reverse proxy)
 python manage.py superreload --ws-path /my-custom-path
 
+# Behind a reverse proxy (browser connects to example.com, no port)
+python manage.py superreload 0.0.0.0:8000 --ws-host 0.0.0.0 --ws-frontend-host example.com
+
 # Disable hot reloading
 python manage.py superreload --no-reload
-
-# All together
-python manage.py superreload 0.0.0.0:8000 --ws-host 0.0.0.0 --ws-port 9999
 ```
 
 ## Django Settings
@@ -56,13 +56,10 @@ You can configure superreload in your `settings.py` file. These settings are opt
 
 ### Available Settings
 
-| Setting                 | Default          | Type   | Description                                                                              |
-| ----------------------- | ---------------- | ------ | ---------------------------------------------------------------------------------------- |
-| `SUPERRELOAD_WS_PORT`   | `9877`           | `int`  | WebSocket server port for browser communication                                          |
-| `SUPERRELOAD_WS_HOST`   | `"localhost"`    | `str`  | WebSocket host (use `"0.0.0.0"` for Docker)                                              |
-| `SUPERRELOAD_WS_PATH`   | `"/superreload"` | `str`  | WebSocket URL path                                                                       |
-| `SUPERRELOAD_WS_SECURE` | `False`          | `bool` | Use secure WebSocket (`wss://`) instead of `ws://`                                       |
-| `SUPERRELOAD_PROXIED`   | `False`          | `bool` | Set to `True` when running behind a reverse proxy (omits port from client WebSocket URL) |
+| Setting                 | Default          | Type   | Description                                        |
+| ----------------------- | ---------------- | ------ | -------------------------------------------------- |
+| `SUPERRELOAD_WS_PATH`   | `"/superreload"` | `str`  | WebSocket URL path                                 |
+| `SUPERRELOAD_WS_SECURE` | `False`          | `bool` | Use secure WebSocket (`wss://`) instead of `ws://` |
 
 ### Example
 
@@ -70,29 +67,8 @@ You can configure superreload in your `settings.py` file. These settings are opt
 # settings.py
 
 # WebSocket configuration (all optional)
-SUPERRELOAD_WS_PORT = 9999          # Custom port
-SUPERRELOAD_WS_HOST = "0.0.0.0"     # For Docker/external access
 SUPERRELOAD_WS_PATH = "/ws/reload"  # Custom path (useful for reverse proxy)
 SUPERRELOAD_WS_SECURE = True        # Use wss:// (for HTTPS sites)
-```
-
-### When to Use Settings vs Command Line
-
-- **Settings**: Use when you want consistent configuration across your team or in Docker Compose
-- **Command line**: Use for quick one-off overrides or local development
-
-Command-line options take precedence over settings.py values.
-
-### Docker Example
-
-For Docker environments, you typically need to expose the WebSocket host:
-
-```python
-# settings.py
-import os
-
-if os.environ.get("DOCKER"):
-    SUPERRELOAD_WS_HOST = "0.0.0.0"
 ```
 
 ## Manual Reload
@@ -134,12 +110,12 @@ These paths are ignored:
 
 ## Reverse Proxy Configuration
 
-When running behind a reverse proxy (like nginx-proxy), the browser connects to the WebSocket on a different port than the server listens on. For example:
+When running behind a reverse proxy (like nginx-proxy), the browser connects to the WebSocket on a different host/port than the server listens on. Use `--ws-frontend-host` to tell the browser where to connect:
 
-- **Server listens on**: `localhost:9877` (inside container)
-- **Browser connects to**: `https://example.com/superreload` (port 443, proxied)
+- `--ws-host` controls what the WebSocket server binds to (e.g., `0.0.0.0:9877`)
+- `--ws-frontend-host` controls what the browser connects to (e.g., `example.com`)
 
-In this case, set `SUPERRELOAD_PROXIED = True` to omit the port from the client-side WebSocket URL. This generates a client-side URL like `wss://example.com/superreload` instead of `wss://example.com:9877/superreload`.
+When `--ws-frontend-host` is provided without a port, the port is omitted from the browser's WebSocket URL (since the proxy handles routing). If a port is included (e.g., `example.com:8443`), it is used in the browser URL.
 
 ### Docker Compose with nginx-proxy
 
@@ -163,13 +139,15 @@ services:
       - "9877"
     volumes:
       - .:/app
-    command: python manage.py superreload 0.0.0.0:8000 --ws-host 0.0.0.0 --force-polling
+    command: >
+      python manage.py superreload 0.0.0.0:8000
+      --ws-host 0.0.0.0
+      --ws-frontend-host example.com
+      --force-polling
 ```
 
 ```python
 # Django settings.py
-SUPERRELOAD_PROXIED = True
-SUPERRELOAD_WS_HOST = "example.com"
 SUPERRELOAD_WS_SECURE = True
 ```
 

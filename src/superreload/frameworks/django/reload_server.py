@@ -28,6 +28,8 @@ class DjangoReloadServer:
         host: str = "localhost",
         websocket_port: int = 9877,
         websocket_path: str = "/superreload",
+        frontend_host: str | None = None,
+        frontend_port: int | None = None,
         watch_paths: list[Path] | None = None,
         force_polling: bool = False,
         poll_delay_ms: int = 300,
@@ -39,6 +41,13 @@ class DjangoReloadServer:
         self.force_polling = force_polling
         self.poll_delay_ms = poll_delay_ms
         self.verbosity = verbosity
+
+        if frontend_host is None:
+            self.frontend_host = host
+            self.frontend_port = websocket_port
+        else:
+            self.frontend_host = frontend_host
+            self.frontend_port = frontend_port
 
         self._configure_django_settings()
 
@@ -74,7 +83,8 @@ class DjangoReloadServer:
         try:
             from django.conf import settings
 
-            settings.SUPERRELOAD_WS_PORT = self.websocket_port
+            settings.SUPERRELOAD_WS_FRONTEND_HOST = self.frontend_host
+            settings.SUPERRELOAD_WS_FRONTEND_PORT = self.frontend_port
             settings.SUPERRELOAD_WS_PATH = self.websocket_path
         except Exception:
             pass
