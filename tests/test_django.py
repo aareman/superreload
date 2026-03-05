@@ -137,8 +137,7 @@ class TestSuperReloadMiddleware:
 
     def test_js_contains_websocket_connection(self) -> None:
         assert "WebSocket" in SUPERRELOAD_JS
-        assert "__SUPERRELOAD_PORT__" in SUPERRELOAD_JS
-        assert "__SUPERRELOAD_PATH__" in SUPERRELOAD_JS
+        assert "__SUPERRELOAD_WS_URL__" in SUPERRELOAD_JS
 
     def test_js_contains_error_overlay(self) -> None:
         assert "superreload-overlay" in SUPERRELOAD_JS
