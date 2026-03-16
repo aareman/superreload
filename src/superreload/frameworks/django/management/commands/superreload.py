@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import select
 import sys
 import threading
 import time
@@ -39,21 +38,19 @@ def _start_keyboard_listener(reload_server: DjangoReloadServer, stdout: Any) -> 
             return
 
         while True:
-            # Detect active debugger to avoid stdin conflicts (pdb issue).
-            # When a debugger is active (sys.gettrace() != None), avoid
-            # blocking reads on stdin. Sleep briefly to prevent coverage
-            # false-positive test failures.
-            if sys.gettrace() is not None:
+            # When the reload server is paused (e.g. debugger active),
+            # yield stdin entirely so the debugger has full control.
+            if reload_server.paused:
                 time.sleep(0.5)
                 continue
 
             try:
-                readable, _, _ = select.select([stdin], [], [], 0.5)
-                if readable:
-                    char = stdin.read(1)
-                    if char.lower() == "r":
-                        stdout.write("Manual reload triggered\n")
-                        reload_server.trigger_reload()
+                line = stdin.readline()
+                if not line:
+                    break
+                if line.strip().lower() == "r":
+                    stdout.write("Manual reload triggered\n")
+                    reload_server.trigger_reload()
             except Exception:
                 break
 

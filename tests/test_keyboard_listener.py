@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from io import StringIO
 from unittest.mock import MagicMock, patch
 
@@ -9,83 +10,56 @@ from superreload.frameworks.django.management.commands.superreload import (
 
 
 class TestKeyboardListener:
-    def test_keyboard_listener_skips_stdin_when_debugger_active(self) -> None:
-        """
-        When sys.gettrace() returns non-None (debugger active),
-        verify that stdin is NOT read and trigger_reload is NOT called.
-        The thread should skip the select.select call entirely.
-        """
+    def test_keyboard_listener_skips_stdin_when_paused(self) -> None:
+        """When reload_server.paused is True, stdin is NOT read."""
         reload_server = MagicMock()
         stdout = StringIO()
 
         mock_stdin = MagicMock()
         mock_stdin.isatty.return_value = True
 
-        # Patch at module level where the function uses them
-        with (
-            patch(
-                "superreload.frameworks.django.management.commands.superreload.sys.gettrace"
-            ) as mock_gettrace,
-            patch(
-                "superreload.frameworks.django.management.commands.superreload.select.select"
-            ) as mock_select,
-            patch(
-                "superreload.frameworks.django.management.commands.superreload.sys.stdin",
-                mock_stdin,
-            ),
+        with patch(
+            "superreload.frameworks.django.management.commands.superreload.sys.stdin",
+            mock_stdin,
         ):
-            # Return a debugger object on first call, then None to break loop
-            mock_gettrace.side_effect = [MagicMock(), None]
-            mock_select.return_value = ([], [], [])
+            # paused returns True always — thread loops sleeping, never reads stdin
+            type(reload_server).paused = property(lambda _self: True)
 
             _start_keyboard_listener(reload_server, stdout)
 
-            # Verify stdin.read was NOT called (skipped due to debugger)
-            mock_stdin.read.assert_not_called()
-            # Verify reload was NOT triggered
+            # Give the daemon thread time to iterate
+            time.sleep(1.0)
+
+            # Verify readline was NOT called (skipped due to paused)
+            mock_stdin.readline.assert_not_called()
             reload_server.trigger_reload.assert_not_called()
 
-    def test_keyboard_listener_triggers_reload_without_debugger(self) -> None:
-        """
-        When sys.gettrace() returns None (no debugger),
-        and stdin provides 'r', verify that trigger_reload IS called.
-        """
+    def test_keyboard_listener_triggers_reload_when_not_paused(self) -> None:
+        """When not paused and stdin provides 'r', trigger_reload IS called."""
         reload_server = MagicMock()
         stdout = StringIO()
 
         mock_stdin = MagicMock()
         mock_stdin.isatty.return_value = True
-        mock_stdin.read.return_value = "r"
+        # First readline returns 'r\n', second returns '' (EOF) to exit loop
+        mock_stdin.readline.side_effect = ["r\n", ""]
 
-        with (
-            patch(
-                "superreload.frameworks.django.management.commands.superreload.sys.gettrace"
-            ) as mock_gettrace,
-            patch(
-                "superreload.frameworks.django.management.commands.superreload.select.select"
-            ) as mock_select,
-            patch(
-                "superreload.frameworks.django.management.commands.superreload.sys.stdin",
-                mock_stdin,
-            ),
+        with patch(
+            "superreload.frameworks.django.management.commands.superreload.sys.stdin",
+            mock_stdin,
         ):
-            # No debugger
-            mock_gettrace.return_value = None
-            # First call: stdin is readable, second call breaks loop
-            mock_select.side_effect = [([mock_stdin], [], []), ([], [], [])]
+            type(reload_server).paused = property(lambda _self: False)
 
             _start_keyboard_listener(reload_server, stdout)
 
-            # Verify stdin.read was called
-            mock_stdin.read.assert_called()
-            # Verify reload was triggered
+            # Give the daemon thread time to process
+            time.sleep(1.0)
+
+            mock_stdin.readline.assert_called()
             reload_server.trigger_reload.assert_called()
 
     def test_keyboard_listener_exits_on_non_tty(self) -> None:
-        """
-        When isatty() returns False (not a TTY),
-        verify that the listener returns early without attempting stdin reads.
-        """
+        """When isatty() returns False, listener returns early."""
         reload_server = MagicMock()
         stdout = StringIO()
 
@@ -98,9 +72,9 @@ class TestKeyboardListener:
         ):
             _start_keyboard_listener(reload_server, stdout)
 
-            # Verify isatty was called
+            # Give the daemon thread time to start
+            time.sleep(0.5)
+
             mock_stdin.isatty.assert_called()
-            # Verify no stdin reads attempted
-            mock_stdin.read.assert_not_called()
-            # Verify no reload triggered
+            mock_stdin.readline.assert_not_called()
             reload_server.trigger_reload.assert_not_called()
