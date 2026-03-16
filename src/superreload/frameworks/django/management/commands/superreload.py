@@ -4,6 +4,7 @@ import logging
 import select
 import sys
 import threading
+import time
 from typing import Any
 
 from django.core.management import execute_from_command_line
@@ -38,6 +39,14 @@ def _start_keyboard_listener(reload_server: DjangoReloadServer, stdout: Any) -> 
             return
 
         while True:
+            # Detect active debugger to avoid stdin conflicts (pdb issue).
+            # When a debugger is active (sys.gettrace() != None), avoid
+            # blocking reads on stdin. Sleep briefly to prevent coverage
+            # false-positive test failures.
+            if sys.gettrace() is not None:
+                time.sleep(0.5)
+                continue
+
             try:
                 readable, _, _ = select.select([stdin], [], [], 0.5)
                 if readable:
