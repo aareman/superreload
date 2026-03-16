@@ -35,6 +35,12 @@ class DjangoReloadServer:
         poll_delay_ms: int = 300,
         verbosity: int = 1,
     ) -> None:
+        self.host: str = host
+        self.websocket_port: int = websocket_port
+        self.websocket_path: str = websocket_path
+        self.force_polling: bool = force_polling
+        self.poll_delay_ms: int = poll_delay_ms
+        self.verbosity: int = verbosity
         self.host = host
         self.websocket_port = websocket_port
         self.websocket_path = websocket_path
@@ -42,6 +48,8 @@ class DjangoReloadServer:
         self.poll_delay_ms = poll_delay_ms
         self.verbosity = verbosity
 
+        self.frontend_host: str
+        self.frontend_port: int | None
         if frontend_host is None:
             self.frontend_host = host
             self.frontend_port = websocket_port
