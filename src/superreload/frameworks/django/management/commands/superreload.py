@@ -31,6 +31,13 @@ def _parse_host_port(value: str) -> tuple[str, int | None]:
 
 
 def _start_keyboard_listener(reload_server: DjangoReloadServer, stdout: Any) -> None:
+    """Start keyboard listener thread for manual reload.
+
+    The thread exits completely when a debugger is detected to avoid
+    any stdin interference. Manual reload can still be triggered via
+    file changes or programmatically.
+    """
+
     def keyboard_thread() -> None:
         stdin = sys.stdin
 
@@ -38,13 +45,29 @@ def _start_keyboard_listener(reload_server: DjangoReloadServer, stdout: Any) -> 
             return
 
         while True:
+            # Exit thread entirely if debugger detected
+            # This prevents ANY stdin operations (including select) while debugging
+            if reload_server.paused:
+                return
+
             try:
+                # Use select with short timeout to check paused state frequently
                 readable, _, _ = select.select([stdin], [], [], 0.5)
+
+                # Check paused again after select (could have changed during timeout)
+                if reload_server.paused:
+                    return
+
                 if readable:
-                    char = stdin.read(1)
-                    if char.lower() == "r":
+                    line = stdin.readline()
+                    if not line:
+                        break
+                    if line.strip().lower() == "r":
                         stdout.write("Manual reload triggered\n")
                         reload_server.trigger_reload()
+            except (OSError, ValueError):
+                # stdin closed or invalid
+                break
             except Exception:
                 break
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
 import threading
 import time
 from pathlib import Path
@@ -35,6 +36,12 @@ class DjangoReloadServer:
         poll_delay_ms: int = 300,
         verbosity: int = 1,
     ) -> None:
+        self.host: str = host
+        self.websocket_port: int = websocket_port
+        self.websocket_path: str = websocket_path
+        self.force_polling: bool = force_polling
+        self.poll_delay_ms: int = poll_delay_ms
+        self.verbosity: int = verbosity
         self.host = host
         self.websocket_port = websocket_port
         self.websocket_path = websocket_path
@@ -42,6 +49,8 @@ class DjangoReloadServer:
         self.poll_delay_ms = poll_delay_ms
         self.verbosity = verbosity
 
+        self.frontend_host: str
+        self.frontend_port: int | None
         if frontend_host is None:
             self.frontend_host = host
             self.frontend_port = websocket_port
@@ -75,9 +84,44 @@ class DjangoReloadServer:
         )
 
         self._running = False
+        self._paused = False
         self._loop: asyncio.AbstractEventLoop | None = None
         self._thread: threading.Thread | None = None
         self._recently_reloaded: dict[Path, float] = {}
+
+    @property
+    def paused(self) -> bool:
+        return self._paused
+
+    def _start_debugger_monitor(self) -> None:
+        """Monitor for active debugger and pause/resume reload server.
+
+        When a debugger (pdb, ipdb, pudb, debugpy) is active, it sets
+        sys.gettrace(). We pause all reload activity and yield stdin
+        so the debugger has full control. Resumes when debugger exits.
+        """
+
+        def monitor() -> None:
+            while self._running:
+                trace_active = sys.gettrace() is not None
+                if trace_active and not self._paused:
+                    self._paused = True
+                    logger.debug("Debugger detected, pausing superreload")
+                    print(
+                        "[superreload] Debugger detected — pausing reloads",
+                        flush=True,
+                    )
+                elif not trace_active and self._paused:
+                    self._paused = False
+                    logger.debug("Debugger exited, resuming superreload")
+                    print(
+                        "[superreload] Debugger exited — resuming reloads",
+                        flush=True,
+                    )
+                time.sleep(0.5)
+
+        thread = threading.Thread(target=monitor, daemon=True)
+        thread.start()
 
     def _configure_django_settings(self) -> None:
         try:
@@ -113,6 +157,8 @@ class DjangoReloadServer:
             del self._recently_reloaded[p]
 
     async def _handle_file_changes(self, changes: list[FileChange]) -> None:
+        if self._paused:
+            return
         paths = list({c.path for c in changes})
         paths = self._filter_cooldown_files(paths)
 
@@ -209,6 +255,8 @@ class DjangoReloadServer:
     def start(self, background: bool = True) -> None:
         if self._running:
             return
+
+        self._start_debugger_monitor()
 
         if background:
             self._thread = threading.Thread(target=self._run_in_thread, daemon=True)
