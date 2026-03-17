@@ -17,10 +17,16 @@ class TestKeyboardListener:
 
         mock_stdin = MagicMock()
         mock_stdin.isatty.return_value = True
-
-        with patch(
-            "superreload.frameworks.django.management.commands.superreload.sys.stdin",
-            mock_stdin,
+        mock_stdin.fileno.return_value = 0  # stdin fd
+        with (
+            patch(
+                "superreload.frameworks.django.management.commands.superreload.sys.stdin",
+                mock_stdin,
+            ),
+            patch(
+                "superreload.frameworks.django.management.commands.superreload.select.select",
+                return_value=([], [], []),  # No stdin readable
+            ),
         ):
             # paused returns True always — thread loops sleeping, never reads stdin
             type(reload_server).paused = property(lambda _self: True)
@@ -41,12 +47,19 @@ class TestKeyboardListener:
 
         mock_stdin = MagicMock()
         mock_stdin.isatty.return_value = True
+        mock_stdin.fileno.return_value = 0  # stdin fd
         # First readline returns 'r\n', second returns '' (EOF) to exit loop
         mock_stdin.readline.side_effect = ["r\n", ""]
 
-        with patch(
-            "superreload.frameworks.django.management.commands.superreload.sys.stdin",
-            mock_stdin,
+        with (
+            patch(
+                "superreload.frameworks.django.management.commands.superreload.sys.stdin",
+                mock_stdin,
+            ),
+            patch(
+                "superreload.frameworks.django.management.commands.superreload.select.select",
+                return_value=([mock_stdin], [], []),  # stdin always readable
+            ),
         ):
             type(reload_server).paused = property(lambda _self: False)
 

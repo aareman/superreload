@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import logging
+import select
 import sys
 import threading
-import time
 from typing import Any
 
 from django.core.management import execute_from_command_line
@@ -38,10 +38,16 @@ def _start_keyboard_listener(reload_server: DjangoReloadServer, stdout: Any) -> 
             return
 
         while True:
+            # Use select with timeout so we can check paused state frequently
+            readable, _, _ = select.select([stdin], [], [], 0.5)
+
             # When the reload server is paused (e.g. debugger active),
-            # yield stdin entirely so the debugger has full control.
+            # don't read stdin at all so the debugger has full control.
             if reload_server.paused:
-                time.sleep(0.5)
+                continue
+
+            # Only read if select says stdin is readable AND we're not paused
+            if not readable:
                 continue
 
             try:
